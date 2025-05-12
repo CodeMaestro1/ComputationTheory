@@ -1,6 +1,7 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
+  #include "cgen.h"
 
   void yyerror(const char *s);
   int yylex(void);
@@ -85,10 +86,10 @@ main_func
 //Type declarations
 type_decls
     : /* empty */
-    | type_decls type__basic_decl
+    | type_decls type_basic_decl
     ;
 
-type__basic_decl
+type_basic_decl
     : KEYWORD_INTEGER
     | KEYWORD_SCALAR
     | KEYWORD_STR
@@ -106,9 +107,16 @@ var_decl
     ;
 
 id_list
-    : IDENTIFIER
-    | id_list COMMA IDENTIFIER
+    : id_decl
+    | id_list COMMA id_decl
     ;
+
+id_decl
+    : IDENTIFIER
+    | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
+    ;
+
 
 //function declarations
 func_decls
