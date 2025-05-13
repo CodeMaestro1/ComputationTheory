@@ -48,6 +48,7 @@
 %token SEMICOLON COLON COMMA DOT
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS
 %token LEFT_BRACKET RIGHT_BRACKET
+%token ARROW
 
 %start program
 
@@ -152,7 +153,7 @@ func_decl
 
 return_type_decl
     : /* empty */
-    | OP_MINUS OP_GT return_type_opt
+    | ARROW return_type_opt
     ;
 
 param

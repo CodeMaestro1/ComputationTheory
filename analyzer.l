@@ -131,6 +131,7 @@ EXP_PART    [eE][+-]?[0-9]+
 "]"                     { printf("Token RIGHT_BRACKET: %s\n", yytext); return RIGHT_BRACKET;}
 ":"                     { printf("Token COLON: %s\n", yytext); return COLON;}
 "."                     { printf("Token DOT: %s\n", yytext); return DOT;}
+"->"                    { printf("Token ARROW: %s\n", yytext); return ARROW;}    
 
 .                       {
     printf("Error: Unrecognized token '%s' at line %d\n", yytext, yylineno);
