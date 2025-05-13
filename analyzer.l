@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "parser.tab.h"
 %}
 
 %option yylineno
@@ -16,7 +17,6 @@ EXP_PART    [eE][+-]?[0-9]+
 %%
 
 
-"/*"                    /* Handle block comments if needed */ 
 "--".*                  ; /* Ignore line comments */
 [ \t\n\r]+              ; /* Ignore whitespace */
 
@@ -50,16 +50,34 @@ EXP_PART    [eE][+-]?[0-9]+
 "or"                    { printf("Token OP_OR: %s\n", yytext); return OP_OR;}
 "not"                   { printf("Token OP_NOT: %s\n", yytext); return OP_NOT;}
 
-[a-zA-Z_][a-zA-Z0-9_]*  { printf("Token IDENTIFIER: %s\n", yytext); return IDENTIFIER;}
+[a-zA-Z_][a-zA-Z0-9_]*  { printf("Token IDENTIFIER: %s\n", yytext); 
+                            yylval.stringVal = strdup(yytext);
+                            return IDENTIFIER;}
 
-0                       { printf("Token CONST_INT: %s\n", yytext); return CONST_INT;}
-[1-9][0-9]*            { printf("Token CONST_INT: %s\n", yytext); return CONST_INT;}
+0                       { printf("Token CONST_INT: %s\n", yytext); 
+                        yylval.integerVal = 0;
+                        return CONST_INT;
+                        }
+
+[1-9][0-9]*            { printf("Token CONST_INT: %s\n", yytext); 
+                            yylval.integerVal = atoi(yytext);
+                            return CONST_INT;
+                        }
 
 
 
-{INT_PART}\.{FRAC_PART}  { printf("Token CONST_REAL: %s\n", yytext); return CONST_REAL; }
-{INT_PART}{EXP_PART}       { printf("Token CONST_REAL: %s\n", yytext); return CONST_REAL; }
-{INT_PART}\.{FRAC_PART}{EXP_PART}  { printf("Token CONST_REAL: %s\n", yytext); return CONST_REAL; }
+{INT_PART}\.{FRAC_PART}  { printf("Token CONST_REAL: %s\n", yytext);
+                            yylval.realVal = atof(yytext);
+                            return CONST_REAL; 
+                        }
+{INT_PART}{EXP_PART}       { printf("Token CONST_REAL: %s\n", yytext);
+                            yylval.realVal = atof(yytext);
+                            return CONST_REAL; 
+                            }
+{INT_PART}\.{FRAC_PART}{EXP_PART}  { printf("Token CONST_REAL: %s\n", yytext);
+                                    yylval.realVal = atof(yytext);
+                                    return CONST_REAL; 
+                                    }
 
 
 
@@ -70,8 +88,9 @@ EXP_PART    [eE][+-]?[0-9]+
     s++; /* Skip opening " */
     int len = yyleng - 2; /* Exclude quotes */
     char *content = strndup(s, len);
-    printf("Token CONST_STRING: %s\n", content); return CONST_STRING;
-    free(content);
+    yylval.stringVal = content;
+    printf("Token CONST_STRING: %s\n", content); 
+    return CONST_STRING;
 }
 
 
@@ -116,12 +135,4 @@ EXP_PART    [eE][+-]?[0-9]+
 .                       {
     printf("Error: Unrecognized token '%s' at line %d\n", yytext, yylineno);
     exit(1);
-}
-
-
-%%
-
-int main(int argc, char **argv) {
-    yylex();
-    return 0;
 }

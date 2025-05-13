@@ -20,11 +20,11 @@
 %token <stringVal> IDENTIFIER CONST_STRING
 %token <integerVal> CONST_INT
 %token <floatVal>  CONST_REAL
+%token  KEYWORD_SCALAR
+%token <stringVal> KEYWORD_STR
+%token <stringVal> OP_COLON_ASSIGN
 
-
-%token <integerVal> KEYWORD_INTEGER 
-KEYWORD_SCALAR 
-KEYWORD_STR 
+%token <integerVal> KEYWORD_INTEGER
 
 %token KEYWORD_IF KEYWORD_ELSE KEYWORD_ENDIF
 %token KEYWORD_WHILE KEYWORD_ENDWHILE
@@ -56,7 +56,6 @@ KEYWORD_STR
 %left LEFT_PARENTHESIS RIGHT_PARENTHESIS
 %left LEFT_BRACKET RIGHT_BRACKET 
 %right OP_POWER
-%right OP_PLUS_ASSIGN OP_MINUS_ASSIGN
 %left OP_MULT_ASSIGN OP_DIV_ASSIGN OP_MOD_ASSIGN
 %left OP_PLUS OP_MINUS
 %left OP_LT OP_LE 
@@ -87,6 +86,7 @@ main_func
 type_decls
     : /* empty */
     | type_decls type_basic_decl
+    | type_decls complex_type_decls
     ;
 
 type_basic_decl
@@ -95,6 +95,26 @@ type_basic_decl
     | KEYWORD_STR
     | KEYWORD_BOOL
     ;
+
+//Complex type declarations
+complex_type_decls
+    : comp_decls
+    | array_decls
+    ;
+
+comp_decls
+    : /* empty */
+    | comp_decls comp_decl
+    ;
+
+comp_decl
+    : KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_ENDCOMP SEMICOLON
+    ;
+
+array_decls
+    : IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET COLON type SEMICOLON
+    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON
+
 
 //variable declarations
 var_decls
@@ -126,7 +146,28 @@ func_decls
 
 func_decl
     : KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS 
-    return_type_opt COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
+    return_type_decl
+    COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
+    ;
+
+return_type_decl
+    : /* empty */
+    | OP_MINUS OP_GT return_type_opt
+    ;
+
+param
+    : IDENTIFIER COLON type
+    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type
+    ;
+
+param_list_opt
+    : /* empty */
+    | param_list
+    ;
+
+param_list
+    : param
+    | param_list COMMA param
     ;
 
 local_decls
@@ -158,25 +199,6 @@ macro_decls
 macro_decl
     : KEYWORD_DEFMACRO IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS
       stmts KEYWORD_ENDMACRO SEMICOLON
-    ;
-
-param_list_opt
-    : /* empty */
-    | param_list
-    ;
-
-param_list
-    : IDENTIFIER
-    | param_list COMMA IDENTIFIER
-    ;
-
-comp_decls
-    : /* empty */
-    | comp_decls comp_decl
-    ;
-
-comp_decl
-    : KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_ENDCOMP SEMICOLON
     ;
 
 
@@ -211,7 +233,7 @@ const_decl
 
 return_type_opt
     : /* empty */
-    | COLON type
+    | type
     ;
 
 return_opt
@@ -273,6 +295,7 @@ type
     | KEYWORD_SCALAR
     | KEYWORD_STR
     | KEYWORD_BOOL
+    | IDENTIFIER
     ;
 
 %%
