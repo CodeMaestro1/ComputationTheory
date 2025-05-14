@@ -115,6 +115,7 @@ comp_decl
 array_decls
     : IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET COLON type SEMICOLON
     | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON
+    ;
 
 
 //variable declarations
@@ -184,12 +185,33 @@ stmts
 
 stmt
     : IDENTIFIER OP_ASSIGN expr SEMICOLON
+        { printf("Assignment statement\n"); }
+    | IDENTIFIER OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON expr 
+      RIGHT_BRACKET COLON type SEMICOLON
+        { printf("Simple compact array construction\n"); }
+    | IDENTIFIER OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON type 
+      KEYWORD_IN IDENTIFIER KEYWORD_OF expr RIGHT_BRACKET COLON type SEMICOLON
+        { printf("Compact array construction using another array\n"); }
     | KEYWORD_IF expr COLON stmts else_part KEYWORD_ENDIF SEMICOLON
+        { printf("If statement\n"); }
+    | KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
+      KEYWORD_ENDIF SEMICOLON
+        { printf("If statement with parentheses\n"); }
     | KEYWORD_WHILE expr COLON stmts KEYWORD_ENDWHILE SEMICOLON
-    | KEYWORD_FOR IDENTIFIER KEYWORD_IN expr COLON stmts KEYWORD_ENDFOR SEMICOLON
+        { printf("While loop\n"); }
+    | KEYWORD_WHILE LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts 
+      KEYWORD_ENDWHILE SEMICOLON
+        { printf("While loop with parentheses\n"); }
+    | KEYWORD_FOR IDENTIFIER KEYWORD_IN range_expr COLON stmts KEYWORD_ENDFOR SEMICOLON
+        { printf("For loop with range\n"); }
     | KEYWORD_BREAK SEMICOLON
+        { printf("Break statement\n"); }
     | KEYWORD_CONTINUE SEMICOLON
+        { printf("Continue statement\n"); }
     | function_call SEMICOLON
+        { printf("Function call statement\n"); }
+    | SEMICOLON
+        { printf("Blank statement\n"); }
     ;
 
 macro_decls
@@ -239,7 +261,11 @@ return_type_opt
 
 return_opt
     : /* empty */
+        { printf("No return statement\n"); }
+    | KEYWORD_RETURN SEMICOLON
+        { printf("Return statement with no value\n"); }
     | KEYWORD_RETURN expr SEMICOLON
+        { printf("Return statement with value\n"); }
     ;
 
 else_part
@@ -281,6 +307,13 @@ expr
     | literal
     | IDENTIFIER
     | function_call
+    ;
+
+range_expr
+    : LEFT_BRACKET expr COLON expr RIGHT_BRACKET
+        { printf("Range with start:stop\n"); }
+    | LEFT_BRACKET expr COLON expr COLON expr RIGHT_BRACKET
+        { printf("Range with start:stop:step\n"); }
     ;
 
 literal

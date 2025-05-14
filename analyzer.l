@@ -3,6 +3,75 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.tab.h"
+
+#define MULTIPLIER 37
+#define HASH_SIZE 101
+
+typedef struct Macro {
+    char *name;
+    char *replacement;
+    struct Macro *next;
+} Macro;
+
+
+Macro *macroTable[HASH_SIZE] = {NULL};
+
+
+unsigned long hash(const char *s)
+{
+    unsigned long h = 0;
+    unsigned const char *us;
+
+    /* cast s to unsigned const char * */
+    /* this ensures that elements of s will be treated as having values >= 0 */
+    us = (unsigned const char *) s;
+
+    while(*us != '\0') {
+        h = h * MULTIPLIER + *us;
+        us++;
+    } 
+
+    return h;
+}
+
+void add_macro(const char *name, const char *replacement)
+{
+    unsigned long h = hash(name) % HASH_SIZE;
+    Macro *new_macro = (Macro *)malloc(sizeof(Macro));
+    new_macro->name = strdup(name);
+    new_macro->replacement = strdup(replacement);
+    new_macro->next = macroTable[h];
+    macroTable[h] = new_macro;
+}
+
+char *lookup_macro(const char *name)
+{
+    unsigned long h = hash(name) % HASH_SIZE;
+    Macro *macro = macroTable[h];
+    while (macro != NULL) {
+        if (strcmp(macro->name, name) == 0) {
+            return macro->replacement;
+        }
+        macro = macro->next;
+    }
+    return NULL;
+}
+
+void free_macro_table(void) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        Macro *current = macroTable[i];
+        while (current != NULL) {
+            Macro *next = current->next;
+            free(current->name);
+            free(current->replacement);
+            free(current);
+            current = next;
+        }
+        macroTable[i] = NULL;
+    }
+}
+
+
 %}
 
 %option yylineno
@@ -16,6 +85,19 @@ EXP_PART    [eE][+-]?[0-9]+
 
 %%
 
+"@defmacro"[ \t]+[a-zA-Z_][a-zA-Z0-9_]*[ \t]+.*\n {
+    char id[256], repl[1024];
+    int pos;
+    if (sscanf(yytext, "@defmacro %255s %n", id, &pos) == 1) {
+        // Extract from position pos to end of line (minus newline)
+        strncpy(repl, yytext + pos, strlen(yytext) - pos - 1);
+        repl[strlen(yytext) - pos - 1] = '\0';
+        add_macro(id, repl);
+        printf("Macro defined: %s -> %s\n", id, repl);
+    } else {
+        printf("Error: Invalid macro definition\n");
+    }
+}
 
 "--".*                  ; /* Ignore line comments */
 [ \t\n\r]+              ; /* Ignore whitespace */
@@ -50,9 +132,18 @@ EXP_PART    [eE][+-]?[0-9]+
 "or"                    { printf("Token OP_OR: %s\n", yytext); return OP_OR;}
 "not"                   { printf("Token OP_NOT: %s\n", yytext); return OP_NOT;}
 
-[a-zA-Z_][a-zA-Z0-9_]*  { printf("Token IDENTIFIER: %s\n", yytext); 
-                            yylval.stringVal = strdup(yytext);
-                            return IDENTIFIER;}
+[a-zA-Z_][a-zA-Z0-9_]*  { 
+    char *macro_replacement = lookup_macro(yytext);
+    if (macro_replacement) {
+        YY_BUFFER_STATE buffer_state = yy_scan_string(macro_replacement);
+        yy_push_buffer_state(buffer_state);
+        return yylex();
+    } else {
+        yylval.stringVal = strdup(yytext);
+        printf("Token IDENTIFIER: %s\n", yytext);
+        return IDENTIFIER;
+    }
+}
 
 0                       { printf("Token CONST_INT: %s\n", yytext); 
                         yylval.integerVal = 0;
@@ -108,10 +199,11 @@ EXP_PART    [eE][+-]?[0-9]+
 
 "+"                     { printf("Token OP_PLUS: %s\n", yytext); return OP_PLUS;}
 "-"                     { printf("Token OP_MINUS: %s\n", yytext); return OP_MINUS;}
+"**"                    { printf("Token OP_POWER: %s\n", yytext); return OP_POWER;}
 "*"                     { printf("Token OP_MULT: %s\n", yytext); return OP_MULT;}
 "/"                     { printf("Token OP_DIV: %s\n", yytext); return OP_DIV;}
 "%"                     { printf("Token OP_MOD: %s\n", yytext); return OP_MOD;}
-"**"                    { printf("Token OP_POWER: %s\n", yytext); return OP_POWER;}
+
 
 
 
