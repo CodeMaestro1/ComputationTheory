@@ -85,18 +85,21 @@ EXP_PART    [eE][+-]?[0-9]+
 
 \0 { /* Nothing to do */ }
 
-@defmacro {
-    // yytext: "@defmacro name replacement"
-    char *line = strdup(yytext + 10); // Skip "@defmacro "
+"@defmacro"[^\n]*\n {
+    /* grab the whole line (including the replacement) in yytext */
+    char *line = strdup(yytext + 10);       /* skip "@defmacro " */
     char *name = strtok(line, " \t");
-    char *repl = strtok(NULL, "");
+    char *repl = strtok(NULL, "\n");
     if (name && repl) {
+        /* strip leading whitespace from repl */
+        while (*repl==' '||*repl=='\t') repl++;
         add_macro(name, repl);
         printf("Macro defined: %s -> %s\n", name, repl);
     } else {
         printf("Error: Invalid macro definition at line %d\n", yylineno);
     }
     free(line);
+    /* consume the directive and do NOT return a token */
 }
 
 "--".*                   /* Ignore line comments */
@@ -137,8 +140,23 @@ EXP_PART    [eE][+-]?[0-9]+
 [a-zA-Z_][a-zA-Z0-9_]*  { 
     char *macro_replacement = lookup_macro(yytext);
     if (macro_replacement) {
-        YY_BUFFER_STATE buffer_state = yy_scan_string(macro_replacement);
-        yypush_buffer_state(buffer_state);
+        printf("DEBUG: Replacing macro '%s' with '%s'\n", yytext, macro_replacement);
+        
+        // Create a copy of the replacement text
+        char *replacement_copy = strdup(macro_replacement);
+        
+        // Unput the replacement text character by character in reverse order
+        int len = strlen(replacement_copy);
+        for (int i = len - 1; i >= 0; i--) {
+            unput(replacement_copy[i]);
+        }
+
+        unput(' '); //This helps when the replacement starts with a special character
+        
+        // Free the copy after using it
+        free(replacement_copy);
+        
+        // Continue lexing without returning a token
     } else {
         yylval.stringVal = strdup(yytext);
         printf("Token IDENTIFIER: %s\n", yytext);

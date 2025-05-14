@@ -3,7 +3,7 @@
   #include <stdlib.h>
   #include "cgen.h"
 
-  //void yyerror(char const* pat, ...);
+  void yyerror(char const* pat, ...);
   int yylex(void);
   extern int yylineno;
   extern void add_macro(const char *name, const char *replacement);
@@ -16,6 +16,8 @@
     float  floatVal;
     char  *stringVal;
 }
+
+%define parse.error verbose
 
 /* Tokens (sync with analyzer.l) */
 
@@ -53,21 +55,26 @@
 
 %start program
 
-/* Operator precedence */
+
+%left OP_OR
+%left OP_AND
+%left OP_EQ OP_NEQ
+%left OP_LT OP_LE OP_GT OP_GE
+%left OP_PLUS OP_MINUS
+%left OP_MULT OP_DIV OP_MOD
+%right OP_POWER
+%right OP_NOT
+
 %left DOT
 %left LEFT_PARENTHESIS RIGHT_PARENTHESIS
 %left LEFT_BRACKET RIGHT_BRACKET 
-%right OP_POWER
-%left OP_MULT OP_DIV OP_MOD
-%left OP_PLUS OP_MINUS
-%left OP_LT OP_LE OP_GT OP_GE
-%left OP_EQ OP_NEQ
-%right OP_NOT
-%left OP_AND
-%left OP_OR
-%right OP_ASSIGN OP_PLUS_ASSIGN OP_MINUS_ASSIGN
-%right OP_MULT_ASSIGN OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
 
+%left COLON
+%right OP_ASSIGN 
+%right OP_PLUS_ASSIGN OP_MINUS_ASSIGN OP_MULT_ASSIGN
+%right OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
+
+%type <stringVal> id_decl
 
 %%
 
@@ -100,7 +107,7 @@ type_basic_decl
 
 //Complex type declarations
 complex_type_decls
-    : comp_decls
+    : comp_decl
     | array_decls
     ;
 
@@ -114,9 +121,9 @@ comp_decl
     ;
 
 array_decls
-    : IDENTIFIER LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type SEMICOLON
+    : id_decl LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type SEMICOLON
         { printf("Array declaration with fixed size %d\n", $3); }
-    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON
+    | id_decl LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON
         { printf("Array declaration with unspecified size\n"); }
     ;
 
@@ -128,7 +135,7 @@ var_decls
     ;
 
 var_decl
-    : id_list COLON type SEMICOLON
+    : id_list COLON type SEMICOLON %prec COLON
     ;
 
 id_list
@@ -138,10 +145,21 @@ id_list
 
 id_decl
     : IDENTIFIER
+        { 
+            printf("Identifier %s\n", $1);
+            $$ = $1;
+        }
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { 
+            printf("Array identifier %s\n", $1);
+            $$ = $1;
+        }
     | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
+        { 
+            printf("Array identifier %s with index\n", $1);
+            $$ = $1;
+        }
     ;
-
 
 //function declarations
 func_decls
@@ -161,8 +179,7 @@ return_type_decl
     ;
 
 param
-    : IDENTIFIER COLON type
-    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type
+    : id_decl COLON type
     ;
 
 param_list_opt
@@ -187,15 +204,45 @@ stmts
     ;
 
 stmt
-    : IDENTIFIER OP_ASSIGN expr SEMICOLON
+    : simple_stmt
+    | compound_stmt
+    ;
+
+simple_stmt
+    : assignment_statement
         { printf("Assignment statement\n"); }
-    | IDENTIFIER OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON expr 
-      RIGHT_BRACKET COLON type SEMICOLON
-        { printf("Simple compact array construction\n"); }
-    | IDENTIFIER OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON type 
-      KEYWORD_IN IDENTIFIER KEYWORD_OF expr RIGHT_BRACKET COLON type SEMICOLON
-        { printf("Compact array construction using another array\n"); }
-    | KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
+    | function_call SEMICOLON
+        { printf("Function call statement\n"); }
+    | KEYWORD_BREAK SEMICOLON
+        { printf("Break statement\n"); }
+    | KEYWORD_CONTINUE SEMICOLON
+        { printf("Continue statement\n"); }
+    | SEMICOLON
+        { printf("Blank statement\n"); }
+    ;
+
+assignment_statement
+    : lvalue OP_ASSIGN expr SEMICOLON
+        { printf("Assignment statement with assignment operator\n"); }
+    | lvalue OP_PLUS_ASSIGN expr SEMICOLON
+        { printf("Assignment statement with plus assignment operator\n"); }
+    | lvalue OP_MINUS_ASSIGN expr SEMICOLON
+        { printf("Assignment statement with minus assignment operator\n"); }
+    | lvalue OP_MULT_ASSIGN expr SEMICOLON
+        { printf("Assignment statement with multiplication assignment operator\n"); }
+    | lvalue OP_DIV_ASSIGN expr SEMICOLON
+        { printf("Assignment statement with division assignment operator\n"); }
+    | lvalue OP_MOD_ASSIGN expr SEMICOLON
+        { printf("Assignment statement with modulo assignment operator\n"); }
+    ;
+
+lvalue
+    : IDENTIFIER
+    | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+    ;
+
+compound_stmt
+    : KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
       KEYWORD_ENDIF SEMICOLON
         { printf("If statement with parentheses\n"); }
     | KEYWORD_WHILE expr COLON stmts KEYWORD_ENDWHILE SEMICOLON
@@ -205,20 +252,23 @@ stmt
         { printf("While loop with parentheses\n"); }
     | KEYWORD_FOR IDENTIFIER KEYWORD_IN range_expr COLON stmts KEYWORD_ENDFOR SEMICOLON
         { printf("For loop with range\n"); }
-    | KEYWORD_BREAK SEMICOLON
-        { printf("Break statement\n"); }
-    | KEYWORD_CONTINUE SEMICOLON
-        { printf("Continue statement\n"); }
-    | function_call SEMICOLON
-        { printf("Function call statement\n"); }
-    | SEMICOLON
-        { printf("Blank statement\n"); }
+    | id_decl OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON expr 
+      RIGHT_BRACKET COLON type SEMICOLON
+        { printf("Simple compact array construction\n"); }
+    | id_decl OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON type 
+      KEYWORD_IN IDENTIFIER KEYWORD_OF expr RIGHT_BRACKET COLON type SEMICOLON
+        { printf("Compact array construction using another array\n"); }
     ;
 
 
 member_decls
     : /* empty */
-    | member_decls member_decl
+    | member_decl_list
+    ;
+
+member_decl_list
+    : member_decl
+    | member_decl_list member_decl
     ;
 
 member_decl
@@ -279,25 +329,50 @@ arg_list
     ;
 
 expr
-    : expr OP_PLUS expr
-    | expr OP_MINUS expr
-    | expr OP_MULT expr
-    | expr OP_DIV expr
-    | expr OP_MOD expr
-    | expr OP_POWER expr
-    | expr OP_EQ expr
-    | expr OP_NEQ expr
-    | expr OP_LT expr
-    | expr OP_LE expr
-    | expr OP_GT expr
-    | expr OP_GE expr
-    | expr OP_AND expr
-    | expr OP_OR expr
-    | OP_NOT expr
-    | LEFT_PARENTHESIS expr RIGHT_PARENTHESIS
+    : logical_expr
+    ;
+
+logical_expr
+    : relational_expr
+    | logical_expr OP_AND relational_expr
+    | logical_expr OP_OR relational_expr
+    ;
+
+relational_expr
+    : arithmetic_expr
+    | relational_expr OP_LT arithmetic_expr
+    | relational_expr OP_LE arithmetic_expr
+    | relational_expr OP_GT arithmetic_expr
+    | relational_expr OP_GE arithmetic_expr
+    | relational_expr OP_EQ arithmetic_expr
+    | relational_expr OP_NEQ arithmetic_expr
+    ;
+
+arithmetic_expr
+    : term
+    | arithmetic_expr OP_PLUS term
+    | arithmetic_expr OP_MINUS term
+    ;
+
+term
+    : factor
+    | term OP_MULT factor
+    | term OP_DIV factor
+    | term OP_MOD factor
+    ;
+
+factor
+    : primary
+    | OP_MINUS factor   /* Unary minus */
+    | OP_NOT factor     /* Logical NOT */
+    | factor OP_POWER primary  /* Exponentiation */
+    ;
+
+primary
+    : IDENTIFIER
     | literal
-    | IDENTIFIER
     | function_call
+    | LEFT_PARENTHESIS expr RIGHT_PARENTHESIS
     ;
 
 range_expr
