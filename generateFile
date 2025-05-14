@@ -1,0 +1,5 @@
+#!/bin/bash
+# filepath: c:\Users\mypc1\Desktop\ComputationTheory\generateFile
+bison -d -v -r all parser.y
+flex -d analyzer.l
+gcc -o mycompiler lex.yy.c parser.tab.c cgen.c -lfl

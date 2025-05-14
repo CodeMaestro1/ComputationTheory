@@ -1,0 +1,176 @@
+parser.y: warning: 5 nonterminals useless in grammar [-Wother]
+parser.y: warning: 12 rules useless in grammar [-Wother]
+parser.y:87.1-10: warning: nonterminal useless in grammar: type_decls [-Wother]
+   87 | type_decls
+      | ^~~~~~~~~~
+parser.y:93.1-15: warning: nonterminal useless in grammar: type_basic_decl [-Wother]
+   93 | type_basic_decl
+      | ^~~~~~~~~~~~~~~
+parser.y:101.1-18: warning: nonterminal useless in grammar: complex_type_decls [-Wother]
+  101 | complex_type_decls
+      | ^~~~~~~~~~~~~~~~~~
+parser.y:115.1-11: warning: nonterminal useless in grammar: array_decls [-Wother]
+  115 | array_decls
+      | ^~~~~~~~~~~
+parser.y:223.1-10: warning: nonterminal useless in grammar: macro_decl [-Wother]
+  223 | macro_decl
+      | ^~~~~~~~~~
+parser.y: warning: 4 shift/reduce conflicts [-Wconflicts-sr]
+parser.y: warning: shift/reduce conflict on token IDENTIFIER [-Wcounterexamples]
+  First example: comp_decls macro_decls const_decls var_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls • IDENTIFIER COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON func_decl main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                         $end
+         ↳ 1: comp_decls macro_decls const_decls var_decls func_decls                                                                                                                                                                                                                          main_func
+                                                           ↳ 15: func_decl                                                                                                                                                                                                           func_decl
+                                                                 ↳ 16: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls                                                         stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                       ↳ 27: local_decls var_decl
+                                                                                                                                                                                         ↳ 8: id_list                 COLON type SEMICOLON
+                                                                                                                                                                                              ↳ 9: id_decl
+                                                                                                                                                                                                   ↳ 11: • IDENTIFIER
+  Second example: comp_decls macro_decls const_decls var_decls func_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls • IDENTIFIER OP_ASSIGN expr SEMICOLON return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                      $end
+         ↳ 1: comp_decls macro_decls const_decls var_decls func_decls                                                                                                                                                                                                                       main_func
+                                                           ↳ 15: func_decls func_decl
+                                                                            ↳ 16: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls stmts                                                     return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                              ↳ 29: stmts     stmt
+                                                                                                                                                                                                    ↳ 28: ε • ↳ 30: IDENTIFIER OP_ASSIGN expr SEMICOLON
+parser.y: warning: shift/reduce conflict on token IDENTIFIER [-Wcounterexamples]
+  First example: comp_decls macro_decls const_decls var_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls • IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON func_decl main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                         $end
+         ↳ 1: comp_decls macro_decls const_decls var_decls func_decls                                                                                                                                                                                                                                                          main_func
+                                                           ↳ 15: func_decl                                                                                                                                                                                                                                           func_decl
+                                                                 ↳ 16: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls                                                                                         stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                       ↳ 27: local_decls var_decl
+                                                                                                                                                                                         ↳ 8: id_list                                                 COLON type SEMICOLON
+                                                                                                                                                                                              ↳ 9: id_decl
+                                                                                                                                                                                                   ↳ 12: • IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+  Second example: comp_decls macro_decls const_decls var_decls func_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls • IDENTIFIER OP_ASSIGN expr SEMICOLON return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                      $end
+         ↳ 1: comp_decls macro_decls const_decls var_decls func_decls                                                                                                                                                                                                                       main_func
+                                                           ↳ 15: func_decls func_decl
+                                                                            ↳ 16: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls stmts                                                     return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                              ↳ 29: stmts     stmt
+                                                                                                                                                                                                    ↳ 28: ε • ↳ 30: IDENTIFIER OP_ASSIGN expr SEMICOLON
+parser.y: warning: shift/reduce conflict on token IDENTIFIER [-Wcounterexamples]
+  First example: comp_decls macro_decls const_decls var_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls • IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON func_decl main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                    $end
+         ↳ 1: comp_decls macro_decls const_decls var_decls func_decls                                                                                                                                                                                                                                                     main_func
+                                                           ↳ 15: func_decl                                                                                                                                                                                                                                      func_decl
+                                                                 ↳ 16: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls                                                                                    stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                       ↳ 27: local_decls var_decl
+                                                                                                                                                                                         ↳ 8: id_list                                            COLON type SEMICOLON
+                                                                                                                                                                                              ↳ 9: id_decl
+                                                                                                                                                                                                   ↳ 13: • IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
+  Second example: comp_decls macro_decls const_decls var_decls func_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls • IDENTIFIER OP_ASSIGN expr SEMICOLON return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                      $end
+         ↳ 1: comp_decls macro_decls const_decls var_decls func_decls                                                                                                                                                                                                                       main_func
+                                                           ↳ 15: func_decls func_decl
+                                                                            ↳ 16: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_decl COLON local_decls stmts                                                     return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                              ↳ 29: stmts     stmt
+                                                                                                                                                                                                    ↳ 28: ε • ↳ 30: IDENTIFIER OP_ASSIGN expr SEMICOLON
+parser.y: warning: shift/reduce conflict on token IDENTIFIER [-Wcounterexamples]
+  First example: comp_decls KEYWORD_COMP IDENTIFIER COLON member_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls • IDENTIFIER COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON method_decl KEYWORD_ENDCOMP SEMICOLON macro_decls const_decls var_decls func_decls main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                                                                                    $end
+         ↳ 1: comp_decls                                                                                                                                                                                                                                                                                                                     macro_decls const_decls var_decls func_decls main_func
+              ↳ 4: comp_decls comp_decl
+                              ↳ 5: KEYWORD_COMP IDENTIFIER COLON member_decls method_decls                                                                                                                                                                                                                         KEYWORD_ENDCOMP SEMICOLON
+                                                                              ↳ 47: method_decl                                                                                                                                                                                                        method_decl
+                                                                                    ↳ 48: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls                                                         stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                         ↳ 27: local_decls var_decl
+                                                                                                                                                                                                           ↳ 8: id_list                 COLON type SEMICOLON
+                                                                                                                                                                                                                ↳ 9: id_decl
+                                                                                                                                                                                                                     ↳ 11: • IDENTIFIER
+  Second example: comp_decls KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls • IDENTIFIER OP_ASSIGN expr SEMICOLON return_opt KEYWORD_ENDDEF SEMICOLON KEYWORD_ENDCOMP SEMICOLON macro_decls const_decls var_decls func_decls main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                                                                                 $end
+         ↳ 1: comp_decls                                                                                                                                                                                                                                                                                                                  macro_decls const_decls var_decls func_decls main_func
+              ↳ 4: comp_decls comp_decl
+                              ↳ 5: KEYWORD_COMP IDENTIFIER COLON member_decls method_decls                                                                                                                                                                                                                      KEYWORD_ENDCOMP SEMICOLON
+                                                                              ↳ 47: method_decls method_decl
+                                                                                                 ↳ 48: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls stmts                                                     return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                                                  ↳ 29: stmts     stmt
+                                                                                                                                                                                                                        ↳ 28: ε • ↳ 30: IDENTIFIER OP_ASSIGN expr SEMICOLON
+parser.y: warning: shift/reduce conflict on token IDENTIFIER [-Wcounterexamples]
+  First example: comp_decls KEYWORD_COMP IDENTIFIER COLON member_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls • IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON method_decl KEYWORD_ENDCOMP SEMICOLON macro_decls const_decls var_decls func_decls main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                                                                                                                    $end
+         ↳ 1: comp_decls                                                                                                                                                                                                                                                                                                                                                     macro_decls const_decls var_decls func_decls main_func
+              ↳ 4: comp_decls comp_decl
+                              ↳ 5: KEYWORD_COMP IDENTIFIER COLON member_decls method_decls                                                                                                                                                                                                                                                         KEYWORD_ENDCOMP SEMICOLON
+                                                                              ↳ 47: method_decl                                                                                                                                                                                                                                        method_decl
+                                                                                    ↳ 48: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls                                                                                         stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                         ↳ 27: local_decls var_decl
+                                                                                                                                                                                                           ↳ 8: id_list                                                 COLON type SEMICOLON
+                                                                                                                                                                                                                ↳ 9: id_decl
+                                                                                                                                                                                                                     ↳ 12: • IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+  Second example: comp_decls KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls • IDENTIFIER OP_ASSIGN expr SEMICOLON return_opt KEYWORD_ENDDEF SEMICOLON KEYWORD_ENDCOMP SEMICOLON macro_decls const_decls var_decls func_decls main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                                                                                 $end
+         ↳ 1: comp_decls                                                                                                                                                                                                                                                                                                                  macro_decls const_decls var_decls func_decls main_func
+              ↳ 4: comp_decls comp_decl
+                              ↳ 5: KEYWORD_COMP IDENTIFIER COLON member_decls method_decls                                                                                                                                                                                                                      KEYWORD_ENDCOMP SEMICOLON
+                                                                              ↳ 47: method_decls method_decl
+                                                                                                 ↳ 48: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls stmts                                                     return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                                                  ↳ 29: stmts     stmt
+                                                                                                                                                                                                                        ↳ 28: ε • ↳ 30: IDENTIFIER OP_ASSIGN expr SEMICOLON
+parser.y: warning: shift/reduce conflict on token IDENTIFIER [-Wcounterexamples]
+  First example: comp_decls KEYWORD_COMP IDENTIFIER COLON member_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls • IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON method_decl KEYWORD_ENDCOMP SEMICOLON macro_decls const_decls var_decls func_decls main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                                                                                                               $end
+         ↳ 1: comp_decls                                                                                                                                                                                                                                                                                                                                                macro_decls const_decls var_decls func_decls main_func
+              ↳ 4: comp_decls comp_decl
+                              ↳ 5: KEYWORD_COMP IDENTIFIER COLON member_decls method_decls                                                                                                                                                                                                                                                    KEYWORD_ENDCOMP SEMICOLON
+                                                                              ↳ 47: method_decl                                                                                                                                                                                                                                   method_decl
+                                                                                    ↳ 48: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls                                                                                    stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                         ↳ 27: local_decls var_decl
+                                                                                                                                                                                                           ↳ 8: id_list                                            COLON type SEMICOLON
+                                                                                                                                                                                                                ↳ 9: id_decl
+                                                                                                                                                                                                                     ↳ 13: • IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
+  Second example: comp_decls KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls • IDENTIFIER OP_ASSIGN expr SEMICOLON return_opt KEYWORD_ENDDEF SEMICOLON KEYWORD_ENDCOMP SEMICOLON macro_decls const_decls var_decls func_decls main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                                                                                                 $end
+         ↳ 1: comp_decls                                                                                                                                                                                                                                                                                                                  macro_decls const_decls var_decls func_decls main_func
+              ↳ 4: comp_decls comp_decl
+                              ↳ 5: KEYWORD_COMP IDENTIFIER COLON member_decls method_decls                                                                                                                                                                                                                      KEYWORD_ENDCOMP SEMICOLON
+                                                                              ↳ 47: method_decls method_decl
+                                                                                                 ↳ 48: KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS return_type_opt COLON local_decls stmts                                                     return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                                                                                                  ↳ 29: stmts     stmt
+                                                                                                                                                                                                                        ↳ 28: ε • ↳ 30: IDENTIFIER OP_ASSIGN expr SEMICOLON
+parser.y: warning: shift/reduce conflict on token COLON [-Wcounterexamples]
+  Example: KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS • COLON KEYWORD_ENDIF SEMICOLON
+  Shift derivation
+    stmt
+    ↳ 34: KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS • COLON stmts   else_part KEYWORD_ENDIF SEMICOLON
+                                                                     ↳ 34: ε ↳ 34: ε
+  Reduce derivation
+    stmt
+    ↳ 33: KEYWORD_IF expr                                            COLON stmts   else_part KEYWORD_ENDIF SEMICOLON
+                     ↳ 79: LEFT_PARENTHESIS expr RIGHT_PARENTHESIS •       ↳ 33: ε ↳ 33: ε
+parser.y: warning: shift/reduce conflict on token COLON [-Wcounterexamples]
+  Example: KEYWORD_WHILE LEFT_PARENTHESIS expr RIGHT_PARENTHESIS • COLON KEYWORD_ENDWHILE SEMICOLON
+  Shift derivation
+    stmt
+    ↳ 36: KEYWORD_WHILE LEFT_PARENTHESIS expr RIGHT_PARENTHESIS • COLON stmts   KEYWORD_ENDWHILE SEMICOLON
+                                                                        ↳ 36: ε
+  Reduce derivation
+    stmt
+    ↳ 35: KEYWORD_WHILE expr                                            COLON stmts   KEYWORD_ENDWHILE SEMICOLON
+                        ↳ 79: LEFT_PARENTHESIS expr RIGHT_PARENTHESIS •       ↳ 35: ε

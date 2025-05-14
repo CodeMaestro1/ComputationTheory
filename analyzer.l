@@ -85,22 +85,23 @@ EXP_PART    [eE][+-]?[0-9]+
 
 %%
 
-"@defmacro"[ \t]+[a-zA-Z_][a-zA-Z0-9_]*[ \t]+.*\n {
-    char id[256], repl[1024];
-    int pos;
-    if (sscanf(yytext, "@defmacro %255s %n", id, &pos) == 1) {
-        // Extract from position pos to end of line (minus newline)
-        strncpy(repl, yytext + pos, strlen(yytext) - pos - 1);
-        repl[strlen(yytext) - pos - 1] = '\0';
-        add_macro(id, repl);
-        printf("Macro defined: %s -> %s\n", id, repl);
-    } else {
-        printf("Error: Invalid macro definition\n");
-    }
-}
-
 "--".*                  ; /* Ignore line comments */
 [ \t\n\r]+              ; /* Ignore whitespace */
+
+
+"@defmacro".*$ {
+    char *name = strdup(yytext + 10); // Skip "@defmacro " (10 characters)
+    char *repl = strchr(name, ' ');
+    if (repl) {
+        *repl = '\0'; // Terminate macro name
+        repl++; // Move to replacement text
+        add_macro(name, repl);
+        printf("Macro defined: %s -> %s\n", name, repl);
+    } else {
+        printf("Error: Invalid macro definition at line %d\n", yylineno);
+    }
+    free(name);
+}
 
 
 "integer"               { printf("Token KEYWORD_INTEGER: %s\n", yytext); return KEYWORD_INTEGER;}
@@ -132,12 +133,13 @@ EXP_PART    [eE][+-]?[0-9]+
 "or"                    { printf("Token OP_OR: %s\n", yytext); return OP_OR;}
 "not"                   { printf("Token OP_NOT: %s\n", yytext); return OP_NOT;}
 
+
+
 [a-zA-Z_][a-zA-Z0-9_]*  { 
     char *macro_replacement = lookup_macro(yytext);
     if (macro_replacement) {
         YY_BUFFER_STATE buffer_state = yy_scan_string(macro_replacement);
-        yy_push_buffer_state(buffer_state);
-        return yylex();
+        yypush_buffer_state(buffer_state);
     } else {
         yylval.stringVal = strdup(yytext);
         printf("Token IDENTIFIER: %s\n", yytext);
@@ -158,15 +160,15 @@ EXP_PART    [eE][+-]?[0-9]+
 
 
 {INT_PART}\.{FRAC_PART}  { printf("Token CONST_REAL: %s\n", yytext);
-                            yylval.realVal = atof(yytext);
+                            yylval.floatVal = atof(yytext);
                             return CONST_REAL; 
                         }
 {INT_PART}{EXP_PART}       { printf("Token CONST_REAL: %s\n", yytext);
-                            yylval.realVal = atof(yytext);
+                            yylval.floatVal = atof(yytext);
                             return CONST_REAL; 
                             }
 {INT_PART}\.{FRAC_PART}{EXP_PART}  { printf("Token CONST_REAL: %s\n", yytext);
-                                    yylval.realVal = atof(yytext);
+                                    yylval.floatVal = atof(yytext);
                                     return CONST_REAL; 
                                     }
 
@@ -183,7 +185,6 @@ EXP_PART    [eE][+-]?[0-9]+
     printf("Token CONST_STRING: %s\n", content); 
     return CONST_STRING;
 }
-
 
 
 
@@ -225,7 +226,13 @@ EXP_PART    [eE][+-]?[0-9]+
 "."                     { printf("Token DOT: %s\n", yytext); return DOT;}
 "->"                    { printf("Token ARROW: %s\n", yytext); return ARROW;}    
 
-.                       {
-    printf("Error: Unrecognized token '%s' at line %d\n", yytext, yylineno);
-    exit(1);
+
+[ -~] { printf("Found printable ASCII: %c (ASCII: %d)\n", yytext[0], (int)yytext[0]); }
+. { 
+    printf("Unrecognized character: %c (ASCII: %d) at line %d\n", 
+           yytext[0], (int)yytext[0], yylineno);
+    // Comment out exit(1) temporarily for debugging
 }
+
+
+%%

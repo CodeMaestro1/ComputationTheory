@@ -6,7 +6,7 @@
 
 #include "cgen.h"
 
-extern int line_num;
+extern int yylineno;
 
 void ssopen(sstream *S) { S->stream = open_memstream(&S->buffer, &S->bufsize); }
 
@@ -45,7 +45,7 @@ char *template(const char *pat, ...) {
 */
 void yyerror(char const *pat, ...) {
   va_list arg;
-  fprintf(stderr, "line %d: ", line_num);
+  fprintf(stderr, "line %d: ", yylineno);
 
   va_start(arg, pat);
   vfprintf(stderr, pat, arg);

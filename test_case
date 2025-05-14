@@ -1,0 +1,55 @@
+CC      := gcc
+CFLAGS  := -Wall
+LEX     := flex
+YACC    := bison
+RM      := @rm -f
+
+EXEC    := analyzer
+LEX_SRC := analyzer.l
+YACC_SRC := parser.y
+LEXOUT  := lex.yy.c
+YACCOUT := parser.tab.c
+YACCHDR := parser.tab.h
+TEST_IN := test_input.txt
+
+.PHONY: all clean test
+
+# Default target
+all: $(EXEC)
+
+# Compile analyzer
+$(EXEC): $(LEXOUT) $(YACCOUT)
+    $(CC) $(CFLAGS) -o $@ $^ -lfl
+    @echo "Analyzer compiled successfully."
+    @echo "Run './$(EXEC) < input_file>' to analyze your input."
+    @echo "-------------------------------"
+    @echo "To clean up generated files, run 'make clean'."
+    @echo "To test the analyzer, run 'make test'."
+    @echo "-------------------------------"
+
+# Generate C code from the flex source
+# Note: we need to generate the parser header file first
+$(LEXOUT): $(LEX_SRC) $(YACCHDR)
+    $(LEX) $(LEX_SRC)
+
+# Generate parser from bison source
+$(YACCOUT) $(YACCHDR): $(YACC_SRC)
+    $(YACC) -d -v -r all $(YACC_SRC)
+
+# Remove generated files
+clean:
+    $(RM) $(EXEC) $(LEXOUT) $(YACCOUT) $(YACCHDR) $(TEST_IN) *.o
+
+# Create test input and run analyzer
+test: $(EXEC)
+    @echo "def main()"              >  $(TEST_IN)
+    @echo "   x := 123"            >> $(TEST_IN)
+    @echo "   y := 3.14"           >> $(TEST_IN)
+    @echo "   z := \"Hello, world!\"" >> $(TEST_IN)
+    @echo "   if x > 100:"          >> $(TEST_IN)
+    @echo "       return True;"     >> $(TEST_IN)
+    @echo "   endif;"               >> $(TEST_IN)
+    @echo "enddef;"                 >> $(TEST_IN)
+    @echo "Running analyzer on test input:"
+    @echo "-------------------------------"
+    ./$(EXEC) < $(TEST_IN)

@@ -3,9 +3,11 @@
   #include <stdlib.h>
   #include "cgen.h"
 
-  void yyerror(const char *s);
+  void yyerror(char const* pat, ...);
   int yylex(void);
   extern int yylineno;
+  extern void add_macro(const char *name, const char *replacement);
+  extern void free_macro_table(void);
 %}
 
 /* Union for semantic values */
@@ -32,7 +34,6 @@
 %token KEYWORD_DEF KEYWORD_ENDDEF KEYWORD_MAIN KEYWORD_RETURN
 %token KEYWORD_CONST
 %token KEYWORD_COMP KEYWORD_ENDCOMP KEYWORD_OF
-%token KEYWORD_DEFMACRO KEYWORD_ENDMACRO
 %token KEYWORD_BOOL BOOL_TRUE BOOL_FALSE
 
 
@@ -57,22 +58,22 @@
 %left LEFT_PARENTHESIS RIGHT_PARENTHESIS
 %left LEFT_BRACKET RIGHT_BRACKET 
 %right OP_POWER
-%left OP_MULT_ASSIGN OP_DIV_ASSIGN OP_MOD_ASSIGN
+%left OP_MULT OP_DIV OP_MOD
 %left OP_PLUS OP_MINUS
-%left OP_LT OP_LE 
-%left OP_GT OP_GE
+%left OP_LT OP_LE OP_GT OP_GE
 %left OP_EQ OP_NEQ
 %right OP_NOT
 %left OP_AND
 %left OP_OR
-%right OP_ASSIGN
-%right OP_PLUS_ASSIGN OP_MINUS_ASSIGN OP_MULT_ASSIGN
-%right OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
+%right OP_ASSIGN OP_PLUS_ASSIGN OP_MINUS_ASSIGN
+%right OP_MULT_ASSIGN OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
+
+
 %%
 
 /* Grammar rules begin here */
 program
-    : comp_decls macro_decls const_decls var_decls func_decls main_func
+    : comp_decls const_decls var_decls func_decls main_func
         { printf("Parsed complete program\n"); }
     ;
 
@@ -113,8 +114,10 @@ comp_decl
     ;
 
 array_decls
-    : IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET COLON type SEMICOLON
+    : IDENTIFIER LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type SEMICOLON
+        { printf("Array declaration with fixed size %d\n", $3); }
     | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON
+        { printf("Array declaration with unspecified size\n"); }
     ;
 
 
@@ -192,8 +195,6 @@ stmt
     | IDENTIFIER OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON type 
       KEYWORD_IN IDENTIFIER KEYWORD_OF expr RIGHT_BRACKET COLON type SEMICOLON
         { printf("Compact array construction using another array\n"); }
-    | KEYWORD_IF expr COLON stmts else_part KEYWORD_ENDIF SEMICOLON
-        { printf("If statement\n"); }
     | KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
       KEYWORD_ENDIF SEMICOLON
         { printf("If statement with parentheses\n"); }
@@ -212,16 +213,6 @@ stmt
         { printf("Function call statement\n"); }
     | SEMICOLON
         { printf("Blank statement\n"); }
-    ;
-
-macro_decls
-    : /* empty */
-    | macro_decls macro_decl
-    ;
-
-macro_decl
-    : KEYWORD_DEFMACRO IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS
-      stmts KEYWORD_ENDMACRO SEMICOLON
     ;
 
 
@@ -326,18 +317,24 @@ literal
 
 type
     : KEYWORD_INTEGER
+        { printf("Type: integer\n"); }
     | KEYWORD_SCALAR
+        { printf("Type: scalar\n"); }
     | KEYWORD_STR
+        { printf("Type: string\n"); }
     | KEYWORD_BOOL
+        { printf("Type: boolean\n"); }
+    | KEYWORD_COMP
+        { printf("Type: complex formula\n"); }
     | IDENTIFIER
+        { printf("Type: user-defined type %s\n", $1); }
+    | LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type
+        { printf("Type: array of size %d\n", $2); }
+    | LEFT_BRACKET RIGHT_BRACKET COLON type
+        { printf("Type: array of unspecified size\n"); }
     ;
 
 %%
-
-/* Error handler */
-void yyerror(const char *s) {
-    fprintf(stderr, "Syntax error at line %d: %s\n", yylineno, s);
-}
 
 int main() {
     if (yyparse() == 0) {
@@ -345,5 +342,8 @@ int main() {
     } else {
         printf("Rejected!\n");
     }
+
+    free_macro_table();
+
     return 0;
 }
