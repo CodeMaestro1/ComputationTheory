@@ -76,8 +76,6 @@ void free_macro_table(void) {
 
 %option yylineno
 %option noyywrap
-%option noinput
-%option nounput
 
 INT_PART    (0|[1-9][0-9]*)      
 FRAC_PART   [0-9]+               
@@ -85,23 +83,24 @@ EXP_PART    [eE][+-]?[0-9]+
 
 %%
 
-"--".*                  ; /* Ignore line comments */
-[ \t\n\r]+              ; /* Ignore whitespace */
+\0 { /* Nothing to do */ }
 
-
-"@defmacro".*$ {
-    char *name = strdup(yytext + 10); // Skip "@defmacro " (10 characters)
-    char *repl = strchr(name, ' ');
-    if (repl) {
-        *repl = '\0'; // Terminate macro name
-        repl++; // Move to replacement text
+@defmacro {
+    // yytext: "@defmacro name replacement"
+    char *line = strdup(yytext + 10); // Skip "@defmacro "
+    char *name = strtok(line, " \t");
+    char *repl = strtok(NULL, "");
+    if (name && repl) {
         add_macro(name, repl);
         printf("Macro defined: %s -> %s\n", name, repl);
     } else {
         printf("Error: Invalid macro definition at line %d\n", yylineno);
     }
-    free(name);
+    free(line);
 }
+
+"--".*                   /* Ignore line comments */
+[ \t\n\r]+               /* Ignore whitespace */
 
 
 "integer"               { printf("Token KEYWORD_INTEGER: %s\n", yytext); return KEYWORD_INTEGER;}
@@ -227,12 +226,9 @@ EXP_PART    [eE][+-]?[0-9]+
 "->"                    { printf("Token ARROW: %s\n", yytext); return ARROW;}    
 
 
-[ -~] { printf("Found printable ASCII: %c (ASCII: %d)\n", yytext[0], (int)yytext[0]); }
 . { 
     printf("Unrecognized character: %c (ASCII: %d) at line %d\n", 
            yytext[0], (int)yytext[0], yylineno);
-    // Comment out exit(1) temporarily for debugging
 }
-
 
 %%

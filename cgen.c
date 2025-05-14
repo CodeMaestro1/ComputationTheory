@@ -10,23 +10,28 @@ extern int yylineno;
 
 void ssopen(sstream *S) { S->stream = open_memstream(&S->buffer, &S->bufsize); }
 
-char *ssvalue(sstream *S) {
+char *ssvalue(sstream *S)
+{
   fflush(S->stream);
   return S->buffer;
 }
 
 void ssclose(sstream *S) { fclose(S->stream); }
 
-char *replaceChar(char* const source, char toBeReplaced, char replacer) {
-	for (int i = 0; i < strlen(source); ++i) {
-		if (source[i] == toBeReplaced) {
-			source[i] = replacer;
-		}
-	}
-	return source;
+char *replaceChar(char *const source, char toBeReplaced, char replacer)
+{
+  for (int i = 0; i < strlen(source); ++i)
+  {
+    if (source[i] == toBeReplaced)
+    {
+      source[i] = replacer;
+    }
+  }
+  return source;
 }
 
-char *template(const char *pat, ...) {
+char *template(const char *pat, ...)
+{
   sstream S;
   ssopen(&S);
 
@@ -43,7 +48,8 @@ char *template(const char *pat, ...) {
 /*
         Report errors
 */
-void yyerror(char const *pat, ...) {
+void yyerror(char const *pat, ...)
+{
   va_list arg;
   fprintf(stderr, "line %d: ", yylineno);
 

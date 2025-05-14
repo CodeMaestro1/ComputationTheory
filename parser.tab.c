@@ -73,7 +73,7 @@
   #include <stdlib.h>
   #include "cgen.h"
 
-  void yyerror(char const* pat, ...);
+  //void yyerror(char const* pat, ...);
   int yylex(void);
   extern int yylineno;
   extern void add_macro(const char *name, const char *replacement);
