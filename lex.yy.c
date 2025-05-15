@@ -1128,8 +1128,6 @@ YY_RULE_SETUP
         for (int i = len - 1; i >= 0; i--) {
             unput(replacement_copy[i]);
         }
-
-        unput(' '); //This helps when the replacement starts with a special character
         
         // Free the copy after using it
         free(replacement_copy);
@@ -1144,7 +1142,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 167 "analyzer.l"
+#line 165 "analyzer.l"
 { printf("Token CONST_INT: %s\n", yytext); 
                         yylval.integerVal = 0;
                         return CONST_INT;
@@ -1152,7 +1150,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 172 "analyzer.l"
+#line 170 "analyzer.l"
 { printf("Token CONST_INT: %s\n", yytext); 
                             yylval.integerVal = atoi(yytext);
                             return CONST_INT;
@@ -1160,7 +1158,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 179 "analyzer.l"
+#line 177 "analyzer.l"
 { printf("Token CONST_REAL: %s\n", yytext);
                             yylval.floatVal = atof(yytext);
                             return CONST_REAL; 
@@ -1168,7 +1166,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 183 "analyzer.l"
+#line 181 "analyzer.l"
 { printf("Token CONST_REAL: %s\n", yytext);
                             yylval.floatVal = atof(yytext);
                             return CONST_REAL; 
@@ -1176,7 +1174,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 187 "analyzer.l"
+#line 185 "analyzer.l"
 { printf("Token CONST_REAL: %s\n", yytext);
                                     yylval.floatVal = atof(yytext);
                                     return CONST_REAL; 
@@ -1185,7 +1183,7 @@ YY_RULE_SETUP
 case 38:
 /* rule 38 can match eol */
 YY_RULE_SETUP
-#line 195 "analyzer.l"
+#line 193 "analyzer.l"
 {
     /* Remove quotes and process escapes */
     char *s = yytext;
@@ -1199,147 +1197,147 @@ YY_RULE_SETUP
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 208 "analyzer.l"
+#line 206 "analyzer.l"
 { printf("Token OP_ASSIGN: %s\n", yytext); return OP_ASSIGN;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 209 "analyzer.l"
+#line 207 "analyzer.l"
 { printf("Token OP_PLUS_ASSIGN: %s\n", yytext); return OP_PLUS_ASSIGN;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 210 "analyzer.l"
+#line 208 "analyzer.l"
 { printf("Token OP_MINUS_ASSIGN: %s\n", yytext); return OP_MINUS_ASSIGN;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 211 "analyzer.l"
+#line 209 "analyzer.l"
 { printf("Token OP_MULT_ASSIGN: %s\n", yytext); return OP_MULT_ASSIGN;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 212 "analyzer.l"
+#line 210 "analyzer.l"
 { printf("Token OP_DIV_ASSIGN: %s\n", yytext); return OP_DIV_ASSIGN;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 213 "analyzer.l"
+#line 211 "analyzer.l"
 { printf("Token OP_MOD_ASSIGN: %s\n", yytext); return OP_MOD_ASSIGN;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 214 "analyzer.l"
+#line 212 "analyzer.l"
 { printf("Token OP_COLON_ASSIGN: %s\n", yytext); return OP_COLON_ASSIGN;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 218 "analyzer.l"
+#line 216 "analyzer.l"
 { printf("Token OP_PLUS: %s\n", yytext); return OP_PLUS;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 219 "analyzer.l"
+#line 217 "analyzer.l"
 { printf("Token OP_MINUS: %s\n", yytext); return OP_MINUS;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 220 "analyzer.l"
+#line 218 "analyzer.l"
 { printf("Token OP_POWER: %s\n", yytext); return OP_POWER;}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 221 "analyzer.l"
+#line 219 "analyzer.l"
 { printf("Token OP_MULT: %s\n", yytext); return OP_MULT;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 222 "analyzer.l"
+#line 220 "analyzer.l"
 { printf("Token OP_DIV: %s\n", yytext); return OP_DIV;}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 223 "analyzer.l"
+#line 221 "analyzer.l"
 { printf("Token OP_MOD: %s\n", yytext); return OP_MOD;}
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 229 "analyzer.l"
+#line 227 "analyzer.l"
 { printf("Token OP_EQ: %s\n", yytext); return OP_EQ;}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 230 "analyzer.l"
+#line 228 "analyzer.l"
 { printf("Token OP_NEQ: %s\n", yytext); return OP_NEQ;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 231 "analyzer.l"
+#line 229 "analyzer.l"
 { printf("Token OP_LT: %s\n", yytext); return OP_LT;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 232 "analyzer.l"
+#line 230 "analyzer.l"
 { printf("Token OP_LE: %s\n", yytext); return OP_LE;}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 233 "analyzer.l"
+#line 231 "analyzer.l"
 { printf("Token OP_GT: %s\n", yytext); return OP_GT;}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 234 "analyzer.l"
+#line 232 "analyzer.l"
 { printf("Token OP_GE: %s\n", yytext); return OP_GE;}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 236 "analyzer.l"
+#line 234 "analyzer.l"
 { printf("Token SEMICOLON: %s\n", yytext); return SEMICOLON;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 237 "analyzer.l"
+#line 235 "analyzer.l"
 { printf("Token LEFT_PARENTHESIS: %s\n", yytext); return LEFT_PARENTHESIS;}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 238 "analyzer.l"
+#line 236 "analyzer.l"
 { printf("Token RIGHT_PARENTHESIS: %s\n", yytext); return RIGHT_PARENTHESIS;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 239 "analyzer.l"
+#line 237 "analyzer.l"
 { printf("Token COMMA: %s\n", yytext); return COMMA;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 240 "analyzer.l"
+#line 238 "analyzer.l"
 { printf("Token LEFT_BRACKET: %s\n", yytext); return LEFT_BRACKET;}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 241 "analyzer.l"
+#line 239 "analyzer.l"
 { printf("Token RIGHT_BRACKET: %s\n", yytext); return RIGHT_BRACKET;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 242 "analyzer.l"
+#line 240 "analyzer.l"
 { printf("Token COLON: %s\n", yytext); return COLON;}
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 243 "analyzer.l"
+#line 241 "analyzer.l"
 { printf("Token DOT: %s\n", yytext); return DOT;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 244 "analyzer.l"
+#line 242 "analyzer.l"
 { printf("Token ARROW: %s\n", yytext); return ARROW;}    
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 247 "analyzer.l"
+#line 245 "analyzer.l"
 { 
     printf("Unrecognized character: %c (ASCII: %d) at line %d\n", 
            yytext[0], (int)yytext[0], yylineno);
@@ -1347,10 +1345,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 252 "analyzer.l"
+#line 250 "analyzer.l"
 ECHO;
 	YY_BREAK
-#line 1354 "lex.yy.c"
+#line 1352 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2367,5 +2365,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 252 "analyzer.l"
+#line 250 "analyzer.l"
 

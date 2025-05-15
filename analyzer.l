@@ -150,8 +150,6 @@ EXP_PART    [eE][+-]?[0-9]+
         for (int i = len - 1; i >= 0; i--) {
             unput(replacement_copy[i]);
         }
-
-        unput(' '); //This helps when the replacement starts with a special character
         
         // Free the copy after using it
         free(replacement_copy);

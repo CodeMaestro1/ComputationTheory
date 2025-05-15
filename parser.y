@@ -38,43 +38,31 @@
 %token KEYWORD_COMP KEYWORD_ENDCOMP KEYWORD_OF
 %token KEYWORD_BOOL BOOL_TRUE BOOL_FALSE
 
-
 %token KEYWORD_BREAK KEYWORD_CONTINUE
 
-
-%token OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD OP_POWER
-%token OP_EQ OP_NEQ OP_LT OP_LE OP_GT OP_GE
-%token OP_AND OP_OR OP_NOT
-%token OP_ASSIGN OP_PLUS_ASSIGN OP_MINUS_ASSIGN
-%token OP_MULT_ASSIGN OP_DIV_ASSIGN OP_MOD_ASSIGN
-
-%token SEMICOLON COLON COMMA DOT
-%token LEFT_PARENTHESIS RIGHT_PARENTHESIS
-%token LEFT_BRACKET RIGHT_BRACKET
+%token SEMICOLON COLON COMMA
 %token ARROW
-
-%start program
-
-
-%left OP_OR
-%left OP_AND
-%left OP_EQ OP_NEQ
-%left OP_LT OP_LE OP_GT OP_GE
-%left OP_PLUS OP_MINUS
-%left OP_MULT OP_DIV OP_MOD
-%right OP_POWER
-%right OP_NOT
 
 %left DOT
 %left LEFT_PARENTHESIS RIGHT_PARENTHESIS
-%left LEFT_BRACKET RIGHT_BRACKET 
-
-%left COLON
+%left LEFT_BRACKET RIGHT_BRACKET
+%right OP_POWER
+%right UMINUS
+%left OP_MULT OP_DIV OP_MOD
+%left OP_PLUS OP_MINUS
+%left OP_LT OP_LE
+%left OP_GT OP_GE
+%left OP_EQ OP_NEQ
+%right OP_NOT
+%left OP_AND
+%left OP_OR
 %right OP_ASSIGN 
 %right OP_PLUS_ASSIGN OP_MINUS_ASSIGN OP_MULT_ASSIGN
 %right OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
 
 %type <stringVal> id_decl
+
+%start program
 
 %%
 
@@ -88,7 +76,7 @@ program
 //Main function
 main_func
     : KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS
-      COLON stmts KEYWORD_ENDDEF SEMICOLON
+        COLON local_decls stmts KEYWORD_ENDDEF SEMICOLON
     ;
 
 //Type declarations
@@ -135,7 +123,7 @@ var_decls
     ;
 
 var_decl
-    : id_list COLON type SEMICOLON %prec COLON
+    : id_list COLON type SEMICOLON
     ;
 
 id_list
@@ -194,13 +182,13 @@ param_list
 
 local_decls
     : /* empty */
-    | local_decls const_decl
     | local_decls var_decl
+    | local_decls const_decl
     ;
 
 stmts
     : /* empty */
-    | stmts stmt
+    | stmt stmts 
     ;
 
 stmt
@@ -245,8 +233,6 @@ compound_stmt
     : KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
       KEYWORD_ENDIF SEMICOLON
         { printf("If statement with parentheses\n"); }
-    | KEYWORD_WHILE expr COLON stmts KEYWORD_ENDWHILE SEMICOLON
-        { printf("While loop\n"); }
     | KEYWORD_WHILE LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts 
       KEYWORD_ENDWHILE SEMICOLON
         { printf("While loop with parentheses\n"); }
@@ -292,7 +278,7 @@ const_decls
     ;
 
 const_decl
-    : KEYWORD_CONST IDENTIFIER COLON type OP_ASSIGN literal SEMICOLON
+    : KEYWORD_CONST IDENTIFIER OP_ASSIGN literal COLON type SEMICOLON
     ;
 
 return_type_opt
@@ -363,13 +349,14 @@ term
 
 factor
     : primary
-    | OP_MINUS factor   /* Unary minus */
+    | OP_MINUS factor %prec UMINUS  /* Unary minus */
     | OP_NOT factor     /* Logical NOT */
     | factor OP_POWER primary  /* Exponentiation */
     ;
 
 primary
     : IDENTIFIER
+    | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
     | literal
     | function_call
     | LEFT_PARENTHESIS expr RIGHT_PARENTHESIS

@@ -83,36 +83,37 @@ extern int yydebug;
     BOOL_FALSE = 284,              /* BOOL_FALSE  */
     KEYWORD_BREAK = 285,           /* KEYWORD_BREAK  */
     KEYWORD_CONTINUE = 286,        /* KEYWORD_CONTINUE  */
-    OP_PLUS = 287,                 /* OP_PLUS  */
-    OP_MINUS = 288,                /* OP_MINUS  */
-    OP_MULT = 289,                 /* OP_MULT  */
-    OP_DIV = 290,                  /* OP_DIV  */
-    OP_MOD = 291,                  /* OP_MOD  */
-    OP_POWER = 292,                /* OP_POWER  */
-    OP_EQ = 293,                   /* OP_EQ  */
-    OP_NEQ = 294,                  /* OP_NEQ  */
-    OP_LT = 295,                   /* OP_LT  */
-    OP_LE = 296,                   /* OP_LE  */
-    OP_GT = 297,                   /* OP_GT  */
-    OP_GE = 298,                   /* OP_GE  */
-    OP_AND = 299,                  /* OP_AND  */
-    OP_OR = 300,                   /* OP_OR  */
-    OP_NOT = 301,                  /* OP_NOT  */
-    OP_ASSIGN = 302,               /* OP_ASSIGN  */
-    OP_PLUS_ASSIGN = 303,          /* OP_PLUS_ASSIGN  */
-    OP_MINUS_ASSIGN = 304,         /* OP_MINUS_ASSIGN  */
-    OP_MULT_ASSIGN = 305,          /* OP_MULT_ASSIGN  */
-    OP_DIV_ASSIGN = 306,           /* OP_DIV_ASSIGN  */
-    OP_MOD_ASSIGN = 307,           /* OP_MOD_ASSIGN  */
-    SEMICOLON = 308,               /* SEMICOLON  */
-    COLON = 309,                   /* COLON  */
-    COMMA = 310,                   /* COMMA  */
-    DOT = 311,                     /* DOT  */
-    LEFT_PARENTHESIS = 312,        /* LEFT_PARENTHESIS  */
-    RIGHT_PARENTHESIS = 313,       /* RIGHT_PARENTHESIS  */
-    LEFT_BRACKET = 314,            /* LEFT_BRACKET  */
-    RIGHT_BRACKET = 315,           /* RIGHT_BRACKET  */
-    ARROW = 316                    /* ARROW  */
+    SEMICOLON = 287,               /* SEMICOLON  */
+    COLON = 288,                   /* COLON  */
+    COMMA = 289,                   /* COMMA  */
+    ARROW = 290,                   /* ARROW  */
+    DOT = 291,                     /* DOT  */
+    LEFT_PARENTHESIS = 292,        /* LEFT_PARENTHESIS  */
+    RIGHT_PARENTHESIS = 293,       /* RIGHT_PARENTHESIS  */
+    LEFT_BRACKET = 294,            /* LEFT_BRACKET  */
+    RIGHT_BRACKET = 295,           /* RIGHT_BRACKET  */
+    OP_POWER = 296,                /* OP_POWER  */
+    UMINUS = 297,                  /* UMINUS  */
+    OP_MULT = 298,                 /* OP_MULT  */
+    OP_DIV = 299,                  /* OP_DIV  */
+    OP_MOD = 300,                  /* OP_MOD  */
+    OP_PLUS = 301,                 /* OP_PLUS  */
+    OP_MINUS = 302,                /* OP_MINUS  */
+    OP_LT = 303,                   /* OP_LT  */
+    OP_LE = 304,                   /* OP_LE  */
+    OP_GT = 305,                   /* OP_GT  */
+    OP_GE = 306,                   /* OP_GE  */
+    OP_EQ = 307,                   /* OP_EQ  */
+    OP_NEQ = 308,                  /* OP_NEQ  */
+    OP_NOT = 309,                  /* OP_NOT  */
+    OP_AND = 310,                  /* OP_AND  */
+    OP_OR = 311,                   /* OP_OR  */
+    OP_ASSIGN = 312,               /* OP_ASSIGN  */
+    OP_PLUS_ASSIGN = 313,          /* OP_PLUS_ASSIGN  */
+    OP_MINUS_ASSIGN = 314,         /* OP_MINUS_ASSIGN  */
+    OP_MULT_ASSIGN = 315,          /* OP_MULT_ASSIGN  */
+    OP_DIV_ASSIGN = 316,           /* OP_DIV_ASSIGN  */
+    OP_MOD_ASSIGN = 317            /* OP_MOD_ASSIGN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -127,7 +128,7 @@ union YYSTYPE
     float  floatVal;
     char  *stringVal;
 
-#line 131 "parser.tab.h"
+#line 132 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
