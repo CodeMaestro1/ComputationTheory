@@ -87,33 +87,34 @@ extern int yydebug;
     COLON = 288,                   /* COLON  */
     COMMA = 289,                   /* COMMA  */
     ARROW = 290,                   /* ARROW  */
-    DOT = 291,                     /* DOT  */
-    LEFT_PARENTHESIS = 292,        /* LEFT_PARENTHESIS  */
-    RIGHT_PARENTHESIS = 293,       /* RIGHT_PARENTHESIS  */
-    LEFT_BRACKET = 294,            /* LEFT_BRACKET  */
-    RIGHT_BRACKET = 295,           /* RIGHT_BRACKET  */
-    OP_POWER = 296,                /* OP_POWER  */
-    UMINUS = 297,                  /* UMINUS  */
-    OP_MULT = 298,                 /* OP_MULT  */
-    OP_DIV = 299,                  /* OP_DIV  */
-    OP_MOD = 300,                  /* OP_MOD  */
-    OP_PLUS = 301,                 /* OP_PLUS  */
-    OP_MINUS = 302,                /* OP_MINUS  */
-    OP_LT = 303,                   /* OP_LT  */
-    OP_LE = 304,                   /* OP_LE  */
-    OP_GT = 305,                   /* OP_GT  */
-    OP_GE = 306,                   /* OP_GE  */
-    OP_EQ = 307,                   /* OP_EQ  */
-    OP_NEQ = 308,                  /* OP_NEQ  */
-    OP_NOT = 309,                  /* OP_NOT  */
-    OP_AND = 310,                  /* OP_AND  */
-    OP_OR = 311,                   /* OP_OR  */
-    OP_ASSIGN = 312,               /* OP_ASSIGN  */
-    OP_PLUS_ASSIGN = 313,          /* OP_PLUS_ASSIGN  */
-    OP_MINUS_ASSIGN = 314,         /* OP_MINUS_ASSIGN  */
-    OP_MULT_ASSIGN = 315,          /* OP_MULT_ASSIGN  */
-    OP_DIV_ASSIGN = 316,           /* OP_DIV_ASSIGN  */
-    OP_MOD_ASSIGN = 317            /* OP_MOD_ASSIGN  */
+    OP_HASH = 291,                 /* OP_HASH  */
+    DOT = 292,                     /* DOT  */
+    LEFT_PARENTHESIS = 293,        /* LEFT_PARENTHESIS  */
+    RIGHT_PARENTHESIS = 294,       /* RIGHT_PARENTHESIS  */
+    LEFT_BRACKET = 295,            /* LEFT_BRACKET  */
+    RIGHT_BRACKET = 296,           /* RIGHT_BRACKET  */
+    OP_POWER = 297,                /* OP_POWER  */
+    UMINUS = 298,                  /* UMINUS  */
+    OP_MULT = 299,                 /* OP_MULT  */
+    OP_DIV = 300,                  /* OP_DIV  */
+    OP_MOD = 301,                  /* OP_MOD  */
+    OP_PLUS = 302,                 /* OP_PLUS  */
+    OP_MINUS = 303,                /* OP_MINUS  */
+    OP_LT = 304,                   /* OP_LT  */
+    OP_LE = 305,                   /* OP_LE  */
+    OP_GT = 306,                   /* OP_GT  */
+    OP_GE = 307,                   /* OP_GE  */
+    OP_EQ = 308,                   /* OP_EQ  */
+    OP_NEQ = 309,                  /* OP_NEQ  */
+    OP_NOT = 310,                  /* OP_NOT  */
+    OP_AND = 311,                  /* OP_AND  */
+    OP_OR = 312,                   /* OP_OR  */
+    OP_ASSIGN = 313,               /* OP_ASSIGN  */
+    OP_PLUS_ASSIGN = 314,          /* OP_PLUS_ASSIGN  */
+    OP_MINUS_ASSIGN = 315,         /* OP_MINUS_ASSIGN  */
+    OP_MULT_ASSIGN = 316,          /* OP_MULT_ASSIGN  */
+    OP_DIV_ASSIGN = 317,           /* OP_DIV_ASSIGN  */
+    OP_MOD_ASSIGN = 318            /* OP_MOD_ASSIGN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -128,7 +129,7 @@ union YYSTYPE
     float  floatVal;
     char  *stringVal;
 
-#line 132 "parser.tab.h"
+#line 133 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

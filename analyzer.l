@@ -202,7 +202,7 @@ EXP_PART    [eE][+-]?[0-9]+
 }
 
 
-
+"#"                     { printf("Token OP_HASH: %s\n", yytext); return OP_HASH;}   
 "="                     { printf("Token OP_ASSIGN: %s\n", yytext); return OP_ASSIGN;}
 "+="                    { printf("Token OP_PLUS_ASSIGN: %s\n", yytext); return OP_PLUS_ASSIGN;}
 "-="                    { printf("Token OP_MINUS_ASSIGN: %s\n", yytext); return OP_MINUS_ASSIGN;}

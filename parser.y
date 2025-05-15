@@ -42,6 +42,7 @@
 
 %token SEMICOLON COLON COMMA
 %token ARROW
+%token OP_HASH
 
 %left DOT
 %left LEFT_PARENTHESIS RIGHT_PARENTHESIS
@@ -61,6 +62,10 @@
 %right OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
 
 %type <stringVal> id_decl
+%type <stringVal> type
+%type <stringVal> relational_expr
+%type <stringVal> arithmetic_expr
+%type <stringVal> logical_expr
 
 %start program
 
@@ -79,26 +84,7 @@ main_func
         COLON local_decls stmts KEYWORD_ENDDEF SEMICOLON
     ;
 
-//Type declarations
-type_decls
-    : /* empty */
-    | type_decls type_basic_decl
-    | type_decls complex_type_decls
-    ;
-
-type_basic_decl
-    : KEYWORD_INTEGER
-    | KEYWORD_SCALAR
-    | KEYWORD_STR
-    | KEYWORD_BOOL
-    ;
-
 //Complex type declarations
-complex_type_decls
-    : comp_decl
-    | array_decls
-    ;
-
 comp_decls
     : /* empty */
     | comp_decls comp_decl
@@ -107,14 +93,6 @@ comp_decls
 comp_decl
     : KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_ENDCOMP SEMICOLON
     ;
-
-array_decls
-    : id_decl LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type SEMICOLON
-        { printf("Array declaration with fixed size %d\n", $3); }
-    | id_decl LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON
-        { printf("Array declaration with unspecified size\n"); }
-    ;
-
 
 //variable declarations
 var_decls
@@ -135,18 +113,28 @@ id_decl
     : IDENTIFIER
         { 
             printf("Identifier %s\n", $1);
-            $$ = $1;
         }
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { 
             printf("Array identifier %s\n", $1);
-            $$ = $1;
         }
     | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
         { 
             printf("Array identifier %s with index\n", $1);
-            $$ = $1;
         }
+    | OP_HASH IDENTIFIER
+        {
+            printf("Private identifier \n");
+        }
+    | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        {
+            printf("Private array identifier\n");
+        }
+    | OP_HASH IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
+        {
+            printf("Private array identifier with index\n");
+        }
+    
     ;
 
 //function declarations
@@ -227,6 +215,8 @@ assignment_statement
 lvalue
     : IDENTIFIER
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+    | OP_HASH IDENTIFIER
+    | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
     ;
 
 compound_stmt
@@ -301,7 +291,7 @@ else_part
     ;
 
 function_call
-    : IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+    : primary LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
     ;
 
 arg_list_opt
@@ -320,24 +310,37 @@ expr
 
 logical_expr
     : relational_expr
+        {$$ = $1;}
     | logical_expr OP_AND relational_expr
+        {$$ = template("%s && %s",$1, $3);}
     | logical_expr OP_OR relational_expr
+        {$$ = template("%s || %s",$1, $3);}
     ;
 
 relational_expr
-    : arithmetic_expr
+    : arithmetic_expr 
+        {$$ = $1;}
     | relational_expr OP_LT arithmetic_expr
+        {$$ = template("%s < %s",$1, $3);}
     | relational_expr OP_LE arithmetic_expr
+        {$$ = template("%s <= %s",$1, $3);}
     | relational_expr OP_GT arithmetic_expr
+        {$$ = template("%s > %s",$1, $3);}
     | relational_expr OP_GE arithmetic_expr
+        {$$ = template("%s >= %s",$1, $3);}
     | relational_expr OP_EQ arithmetic_expr
+        {$$ = template("%s == %s",$1, $3);}
     | relational_expr OP_NEQ arithmetic_expr
+        {$$ = template("%s != %s",$1, $3);}
     ;
 
 arithmetic_expr
     : term
+        {$$ = $1;}
     | arithmetic_expr OP_PLUS term
+        {$$ = template("%s + %s",$1, $3);}
     | arithmetic_expr OP_MINUS term
+        {$$ = template("%s - %s",$1, $3);}
     ;
 
 term
@@ -356,6 +359,11 @@ factor
 
 primary
     : IDENTIFIER
+    | OP_HASH IDENTIFIER
+    |primary DOT IDENTIFIER
+        { printf("Member access: %s\n", $3); }
+    | primary DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { printf("Method call: %s\n", $3); }
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
     | literal
     | function_call
@@ -379,15 +387,15 @@ literal
 
 type
     : KEYWORD_INTEGER
-        { printf("Type: integer\n"); }
+        {$$ = template("%s", "int");}
     | KEYWORD_SCALAR
-        { printf("Type: scalar\n"); }
+        {$$ = template("%s","double");}
     | KEYWORD_STR
-        { printf("Type: string\n"); }
+        {$$ = template("%s", "char*");}
     | KEYWORD_BOOL
-        { printf("Type: boolean\n"); }
+        {$$ = template("%s", "int");}
     | KEYWORD_COMP
-        { printf("Type: complex formula\n"); }
+        {$$ = template("%s", "typedef struct {");}
     | IDENTIFIER
         { printf("Type: user-defined type %s\n", $1); }
     | LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type
