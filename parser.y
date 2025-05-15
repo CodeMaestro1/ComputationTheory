@@ -66,6 +66,15 @@
 %type <stringVal> relational_expr
 %type <stringVal> arithmetic_expr
 %type <stringVal> logical_expr
+%type <stringVal> literal
+%type <stringVal> term
+%type <stringVal> factor
+%type <stringVal> range_expr
+%type <stringVal> expr
+%type <stringVal> function_call
+%type <stringVal> primary postfix
+%type <stringVal> arg_list arg_list_opt
+%type <stringVal> lvalue
 
 %start program
 
@@ -199,24 +208,28 @@ simple_stmt
 
 assignment_statement
     : lvalue OP_ASSIGN expr SEMICOLON
-        { printf("Assignment statement with assignment operator\n"); }
+        
     | lvalue OP_PLUS_ASSIGN expr SEMICOLON
-        { printf("Assignment statement with plus assignment operator\n"); }
+        
     | lvalue OP_MINUS_ASSIGN expr SEMICOLON
-        { printf("Assignment statement with minus assignment operator\n"); }
+        
     | lvalue OP_MULT_ASSIGN expr SEMICOLON
-        { printf("Assignment statement with multiplication assignment operator\n"); }
+        
     | lvalue OP_DIV_ASSIGN expr SEMICOLON
-        { printf("Assignment statement with division assignment operator\n"); }
+        
     | lvalue OP_MOD_ASSIGN expr SEMICOLON
-        { printf("Assignment statement with modulo assignment operator\n"); }
+        
     ;
 
 lvalue
     : IDENTIFIER
+        { $$ = $1; }
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("%s[%s]", $1, $3); }
     | OP_HASH IDENTIFIER
+        { $$ = template("#%s",$2); }
     | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("#%s[%s]", $2, $4); }
     ;
 
 compound_stmt
@@ -258,7 +271,7 @@ method_decls
 
 method_decl
     : KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS
-      return_type_opt COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
+      return_type_decl COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
     ;
 
 
@@ -292,10 +305,13 @@ else_part
 
 function_call
     : primary LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+    | primary DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { printf("Method call\n"); }
     ;
 
 arg_list_opt
-    : /* empty */
+    : /*empty */
+        { $$ = "" ;}
     | arg_list
     ;
 
@@ -345,29 +361,48 @@ arithmetic_expr
 
 term
     : factor
+        {$$ = $1;}
     | term OP_MULT factor
+        {$$ = template("%s * %s",$1, $3);}
     | term OP_DIV factor
+        {$$ = template("%s / %s",$1, $3);}
     | term OP_MOD factor
+        {$$ = template("%s %% %s",$1, $3);}
     ;
 
+
 factor
-    : primary
-    | OP_MINUS factor %prec UMINUS  /* Unary minus */
-    | OP_NOT factor     /* Logical NOT */
-    | factor OP_POWER primary  /* Exponentiation */
+    : postfix
+        { $$ = $1; }
+    | OP_MINUS factor %prec UMINUS
+        { $$ = template("-%s",$2); }
+    | OP_NOT factor
+        { $$ = template("!%s",$2); }
+    | factor OP_POWER postfix
+        { $$ = template("pow(%s, %s)", $1, $3); }
     ;
 
 primary
     : IDENTIFIER
+        { $$ = $1; }
     | OP_HASH IDENTIFIER
-    |primary DOT IDENTIFIER
-        { printf("Member access: %s\n", $3); }
-    | primary DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { printf("Method call: %s\n", $3); }
-    | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("#%s",$2); }
     | literal
-    | function_call
     | LEFT_PARENTHESIS expr RIGHT_PARENTHESIS
+        { $$ = template("(%s)", $2); }
+    ;
+
+postfix
+    : primary
+        { $$ = $1; }
+    | postfix LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("%s[%s]", $1, $3); }
+    | postfix DOT IDENTIFIER
+        { $$ = template("%s.%s", $1, $3); }
+    | postfix DOT OP_HASH IDENTIFIER
+        { $$ = template("%s.#%s", $1, $4); }
+    | postfix LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s(%s)", $1, $3); }
     ;
 
 range_expr
@@ -379,10 +414,15 @@ range_expr
 
 literal
     : CONST_INT
+        {$$ = template("%d", $1);}
     | CONST_REAL
+        {$$ = template("%f", $1);}
     | CONST_STRING
+        {$$ = template("%s", $1);}
     | BOOL_TRUE
+        {$$ = template("%s", "1");}
     | BOOL_FALSE
+        {$$ = template("%s", "0");}
     ;
 
 type
