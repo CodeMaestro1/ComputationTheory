@@ -69,12 +69,17 @@
 %type <stringVal> literal
 %type <stringVal> term
 %type <stringVal> factor
-%type <stringVal> range_expr
 %type <stringVal> expr
 %type <stringVal> function_call
 %type <stringVal> primary postfix
 %type <stringVal> arg_list arg_list_opt
 %type <stringVal> lvalue
+%type <stringVal> compound_stmt
+%type <stringVal> else_part
+%type <stringVal> for_loop
+%type <stringVal> return_opt
+%type <stringVal> stmt stmts simple_stmt assignment_statement
+
 
 %start program
 
@@ -185,7 +190,9 @@ local_decls
 
 stmts
     : /* empty */
+        { $$ = ""; }
     | stmt stmts 
+        { $$ = template("%s\n%s", $1, $2); }
     ;
 
 stmt
@@ -195,15 +202,15 @@ stmt
 
 simple_stmt
     : assignment_statement
-        { printf("Assignment statement\n"); }
+        { $$ = $1; }
     | function_call SEMICOLON
-        { printf("Function call statement\n"); }
+        { $$ = template("%s;", $1); }
     | KEYWORD_BREAK SEMICOLON
-        { printf("Break statement\n"); }
+        { $$ = template("break;"); }
     | KEYWORD_CONTINUE SEMICOLON
-        { printf("Continue statement\n"); }
+        { $$ = template("continue;"); }
     | SEMICOLON
-        { printf("Blank statement\n"); }
+        { $$ = ""; }
     ;
 
 assignment_statement
@@ -235,12 +242,12 @@ lvalue
 compound_stmt
     : KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
       KEYWORD_ENDIF SEMICOLON
-        { printf("If statement with parentheses\n"); }
+        { $$ = template("if(%s) {\n%s\n}%s", $3, $6, $7); }
     | KEYWORD_WHILE LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts 
-      KEYWORD_ENDWHILE SEMICOLON
-        { printf("While loop with parentheses\n"); }
-    | KEYWORD_FOR IDENTIFIER KEYWORD_IN range_expr COLON stmts KEYWORD_ENDFOR SEMICOLON
-        { printf("For loop with range\n"); }
+    KEYWORD_ENDWHILE SEMICOLON
+        { $$ = template("while(%s){\n%s}", $3, $6); }
+    | for_loop
+        { $$ = $1; }
     | id_decl OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON expr 
       RIGHT_BRACKET COLON type SEMICOLON
         { printf("Simple compact array construction\n"); }
@@ -249,6 +256,37 @@ compound_stmt
         { printf("Compact array construction using another array\n"); }
     ;
 
+for_loop
+    : KEYWORD_FOR IDENTIFIER KEYWORD_IN 
+      LEFT_BRACKET expr COLON expr RIGHT_BRACKET COLON stmts KEYWORD_ENDFOR SEMICOLON
+        {
+          /* 1) standard “for i in [start:stop]” */
+          $$ = template(
+            "for(int %s = %s; %s < %s; %s++) {\n%s}",
+            $2,    /* loop var */  
+            $5,    /* start */  
+            $2,    /* loop var */  
+            $7,    /* stop */  
+            $2,    /* loop var */  
+            $10    /* body (stmts) */
+          );
+        }
+    | KEYWORD_FOR IDENTIFIER KEYWORD_IN 
+      LEFT_BRACKET expr COLON expr COLON expr RIGHT_BRACKET COLON stmts KEYWORD_ENDFOR SEMICOLON
+        {
+          /* 2) “for i in [start:stop:step]” */
+          $$ = template(
+            "for(int %s = %s; %s < %s; %s += %s) {\n%s}",
+            $2,    /* loop var */
+            $5,    /* start */
+            $2,    /* loop var */
+            $7,    /* stop */
+            $2,    /* loop var */
+            $9,    /* step */
+            $12    /* body */
+          );
+        }
+    ;
 
 member_decls
     : /* empty */
@@ -300,7 +338,9 @@ return_opt
 
 else_part
     : /* empty */
+        { $$ = ""; }
     | KEYWORD_ELSE COLON stmts
+        { $$ = template("else {\n%s\n}", $3); }
     ;
 
 function_call
@@ -403,13 +443,6 @@ postfix
         { $$ = template("%s.#%s", $1, $4); }
     | postfix LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
         { $$ = template("%s(%s)", $1, $3); }
-    ;
-
-range_expr
-    : LEFT_BRACKET expr COLON expr RIGHT_BRACKET
-        { printf("Range with start:stop\n"); }
-    | LEFT_BRACKET expr COLON expr COLON expr RIGHT_BRACKET
-        { printf("Range with start:stop:step\n"); }
     ;
 
 literal
