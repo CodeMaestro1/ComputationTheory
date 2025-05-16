@@ -284,17 +284,17 @@ simple_stmt
 
 assignment_statement
     : lvalue OP_ASSIGN expr SEMICOLON
-        
+        { $$ = template("%s = %s;", $1, $3); }
     | lvalue OP_PLUS_ASSIGN expr SEMICOLON
-        
+        { $$ = template("%s += %s;", $1, $3); }
     | lvalue OP_MINUS_ASSIGN expr SEMICOLON
-        
+        {$$ = template("%s -= %s;", $1, $3); }
     | lvalue OP_MULT_ASSIGN expr SEMICOLON
-        
+        { $$ = template("%s *= %s;", $1, $3); }
     | lvalue OP_DIV_ASSIGN expr SEMICOLON
-        
+        { $$ = template("%s /= %s;", $1, $3); }
     | lvalue OP_MOD_ASSIGN expr SEMICOLON
-        
+        { $$ = template("%s %%= %s;", $1, $3); }
     ;
 
 lvalue
