@@ -78,8 +78,17 @@
 %type <stringVal> else_part
 %type <stringVal> for_loop
 %type <stringVal> return_opt
+%type <stringVal> local_decls
 %type <stringVal> stmt stmts simple_stmt assignment_statement
-
+%type <stringVal> list_comp
+%type <stringVal> list_comp_array
+%type <stringVal> param param_list param_list_opt return_type_decl func_decl
+%type <stringVal> var_decl var_decls
+%type <stringVal> const_decl const_decls
+%type <stringVal> main_func
+%type <stringVal> func_decls
+%type <stringVal> id_list
+%type <stringVal> field_id
 
 %start program
 
@@ -88,14 +97,33 @@
 /* Grammar rules begin here */
 program
     : comp_decls const_decls var_decls func_decls main_func
-        { printf("Parsed complete program\n"); }
+        { 
+          // Top-level program structure in C99
+          printf("#include <stdio.h>\n");
+          printf("#include <stdlib.h>\n");
+          printf("#include <math.h>\n\n");
+          printf("%s\n", $2);  // Global constants
+          printf("%s\n", $3);  // Global variables 
+          printf("%s\n", $4);  // Function declarations
+          printf("int main() {\n%s\n  return 0; \n}\n", $5);  // Main function
+          printf("Parsed complete program\n"); 
+        }
     ;
 
 
 //Main function
 main_func
     : KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS
-        COLON local_decls stmts KEYWORD_ENDDEF SEMICOLON
+        COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
+        {
+            /* Transform Lambda main function to C99 main function body */
+            $$ = template("%s\n%s",
+                $6,    /* local declarations */
+                $7     /* statements */
+            );
+            /* Note: We're not including the return_opt because in C99 main(),
+               we'll add a default "return 0;" if needed */
+        }
     ;
 
 //Complex type declarations
@@ -111,11 +139,20 @@ comp_decl
 //variable declarations
 var_decls
     : /* empty */
+        { $$ = ""; }
     | var_decls var_decl
+        { 
+          // Append the variable declaration to existing declarations
+          $$ = template("%s\n%s", $1, $2);
+        }
     ;
 
 var_decl
     : id_list COLON type SEMICOLON
+        {
+          // Transform Lambda variable declaration to C99 format
+          $$ = template("%s %s;", $3, $1);
+        }
     ;
 
 id_list
@@ -154,38 +191,70 @@ id_decl
 //function declarations
 func_decls
     : /* empty */
+        { $$ = ""; }  // Empty string for no function declarations
     | func_decls func_decl
+        { 
+          // Append the function declaration to existing declarations
+          $$ = template("%s\n\n%s", $1, $2);
+        }
     ;
 
 func_decl
     : KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS 
     return_type_decl
     COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
+    {
+        /* Transform Lambda function to C99 function */
+        $$ = template(
+            "%s %s(%s) {\n%s\n%s\n}",
+            $6,    /* return type */
+            $2,    /* function name */
+            $4,    /* parameter list (empty string if no parameters) */
+            $8,    /* local declarations */
+            $9     /* function body statements */
+        );
+    }
     ;
 
 return_type_decl
     : /* empty */
-    | ARROW return_type_opt
+        { $$ = "void"; }
+    | ARROW type
+        { $$ = $2; }
     ;
 
 param
     : id_decl COLON type
+        { $$ = template("%s %s", $3, $1); }
     ;
 
 param_list_opt
     : /* empty */
+        { $$ = ""; }
     | param_list
+        { $$ = $1; }
     ;
 
 param_list
     : param
+        { $$ = $1; }
     | param_list COMMA param
+        { $$ = template("%s, %s", $1, $3); }
     ;
 
 local_decls
     : /* empty */
+        { $$ = ""; }  // Empty declarations -> empty string
     | local_decls var_decl
+        { 
+          // Append the variable declaration to existing declarations
+          $$ = template("%s\n%s", $1, $2);
+        }
     | local_decls const_decl
+        {
+          // Append the constant declaration to existing declarations
+          $$ = template("%s\n%s", $1, $2);
+        }
     ;
 
 stmts
@@ -248,12 +317,10 @@ compound_stmt
         { $$ = template("while(%s){\n%s}", $3, $6); }
     | for_loop
         { $$ = $1; }
-    | id_decl OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON expr 
-      RIGHT_BRACKET COLON type SEMICOLON
-        { printf("Simple compact array construction\n"); }
-    | id_decl OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON type 
-      KEYWORD_IN IDENTIFIER KEYWORD_OF expr RIGHT_BRACKET COLON type SEMICOLON
-        { printf("Compact array construction using another array\n"); }
+    | list_comp
+        { $$ = $1; }
+    | list_comp_array
+        { $$ = $1; }
     ;
 
 for_loop
@@ -284,9 +351,70 @@ for_loop
             $2,    /* loop var */
             $9,    /* step */
             $12    /* body */
-          );
+        );
         }
-    ;
+;
+
+list_comp
+  : id_decl OP_COLON_ASSIGN 
+    LEFT_BRACKET expr        /* $4: the “value” expression */
+    KEYWORD_FOR IDENTIFIER   /* $6: loop variable */
+    COLON expr               /* $8: the bound (length) */
+    RIGHT_BRACKET COLON type /* $11: C element type */ 
+    SEMICOLON
+    {
+      /* 1) Allocate: */
+      $$ = template(
+        "%s *%s = malloc(sizeof(%s) * (%s));\n"
+        "for(int %s = 0; %s < %s; %s++) {\n"
+        "    %s[%s] = %s;\n"
+        "}",
+        $11,   /* C type */
+        $1,    /* array name */
+        $11,   /* element C type */
+        $8,    /* number of elements */
+        $6,    /* loop var */
+        $6,    /* loop var */
+        $8,    /* bound */
+        $6,    /* loop var increment */
+        $1,    /* array name */
+        $6,    /* index */
+        $4     /* expression for each element */
+    );
+    }
+;
+
+
+list_comp_array
+    :id_decl OP_COLON_ASSIGN LEFT_BRACKET expr KEYWORD_FOR IDENTIFIER COLON type 
+      KEYWORD_IN IDENTIFIER KEYWORD_OF expr RIGHT_BRACKET COLON type SEMICOLON
+    {
+      /* Generate C code for array comprehension using another array
+         Format: new_array := [expr for elm: type in array of size] : new_type; */
+      $$ = template(
+          "%s* %s = (%s*)malloc(%s * sizeof(%s));\n"
+          "for(int %s_i = 0; %s_i < %s; ++%s_i) {\n"
+          "    %s %s = %s[%s_i];\n"      /* Create temporary variable for the element */
+          "    %s[%s_i] = %s;\n"         /* Use that variable in the expression */
+          "}",
+          $15,   /* new_type (target type) */
+          $1,    /* new_array name */
+          $15,   /* new_type for casting */
+          $12,   /* size of source array */
+          $15,   /* new_type for sizeof */
+          $10,   /* source array name for iterator */
+          $10,   /* source array name for iterator */
+          $12,   /* size for loop condition */
+          $10,   /* source array name for iterator increment */
+          $8,    /* element type */
+          $6,    /* element variable name (like 'x' in example) */
+          $10,   /* source array name */
+          $10,   /* source array name for iterator */
+          $1,    /* new_array name for assignment */
+          $10,   /* source array name for iterator */
+          $4     /* The original expression - will use the temporary variable */
+      );
+    }
 
 member_decls
     : /* empty */
@@ -315,16 +443,20 @@ method_decl
 
 const_decls
     : /* empty */
+        {$$ = "";}
     | const_decls const_decl
+        { 
+          // Append the constant declaration to existing declarations
+          $$ = template("%s\n%s", $1, $2);
+        }
     ;
 
 const_decl
     : KEYWORD_CONST IDENTIFIER OP_ASSIGN literal COLON type SEMICOLON
-    ;
-
-return_type_opt
-    : /* empty */
-    | type
+        {
+          // Transform Lambda constant to C99 const
+          $$ = template("const %s %s = %s;", $6, $2, $4);
+        }
     ;
 
 return_opt
@@ -345,7 +477,7 @@ else_part
 
 function_call
     : primary LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-    | primary DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+    | primary DOT field_id LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
         { printf("Method call\n"); }
     ;
 
@@ -362,6 +494,7 @@ arg_list
 
 expr
     : logical_expr
+        {$$ = $1;}
     ;
 
 logical_expr
@@ -432,15 +565,20 @@ primary
         { $$ = template("(%s)", $2); }
     ;
 
+field_id
+    : IDENTIFIER
+        { $$ = $1; }
+    | OP_HASH IDENTIFIER
+        { $$ = template("#%s", $2); }
+    ;
+
 postfix
     : primary
         { $$ = $1; }
     | postfix LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("%s[%s]", $1, $3); }
-    | postfix DOT IDENTIFIER
+    | postfix DOT field_id
         { $$ = template("%s.%s", $1, $3); }
-    | postfix DOT OP_HASH IDENTIFIER
-        { $$ = template("%s.#%s", $1, $4); }
     | postfix LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
         { $$ = template("%s(%s)", $1, $3); }
     ;
