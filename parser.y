@@ -479,19 +479,23 @@ else_part
 
 function_call
     : primary LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s(%s)", $1, $3); }
     | primary DOT field_id LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { printf("Method call\n"); }
+        { $$ = template("%s.%s(%s)", $1, $3, $5); }
     ;
 
 arg_list_opt
     : /*empty */
         { $$ = "" ;}
     | arg_list
+        { $$ = $1 ;}
     ;
 
 arg_list
     : expr
+        {$$ = $1;}
     | arg_list COMMA expr
+        {$$ = template("%s, %s", $1, $3);}
     ;
 
 expr
@@ -591,7 +595,7 @@ literal
     | CONST_REAL
         {$$ = template("%f", $1);}
     | CONST_STRING
-        {$$ = template("%s", $1);}
+        {$$ = template("\"%s\"", $1);}
     | BOOL_TRUE
         {$$ = template("%s", "1");}
     | BOOL_FALSE
