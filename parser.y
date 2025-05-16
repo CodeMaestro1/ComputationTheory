@@ -266,7 +266,9 @@ stmts
 
 stmt
     : simple_stmt
-    | compound_stmt
+        { $$ = $1; }  
+    | compound_stmt  
+        { $$ = $1; }
     ;
 
 simple_stmt
