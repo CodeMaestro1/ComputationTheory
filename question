@@ -1,0 +1,18 @@
+type
+    : KEYWORD_INTEGER
+        { $$ = template("%s", "int"); }
+    | KEYWORD_SCALAR
+        { $$ = template("%s", "double"); }
+    | KEYWORD_STR
+        { $$ = template("%s", "char*"); }
+    | KEYWORD_BOOL
+        { $$ = template("%s", "int"); }
+    | KEYWORD_COMP
+        { $$ = template("struct"); }  // Changed from typedef struct
+    | IDENTIFIER
+        { $$ = template("struct %s", $1); }  // Add struct keyword for user-defined types
+    | LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type
+        { $$ = template("%s[%d]", $5, $2); }
+    | LEFT_BRACKET RIGHT_BRACKET COLON type
+        { $$ = template("%s*", $4); }  // Dynamic arrays become pointers
+    ;

@@ -89,6 +89,8 @@
 %type <stringVal> func_decls
 %type <stringVal> id_list
 %type <stringVal> field_id
+%type <stringVal> member_decl member_decl_list
+%type <stringVal> member_decls method_decl method_decls
 
 %start program
 
@@ -157,35 +159,23 @@ var_decl
 
 id_list
     : id_decl
+        { $$ = $1; }
     | id_list COMMA id_decl
     ;
 
 id_decl
     : IDENTIFIER
-        { 
-            printf("Identifier %s\n", $1);
-        }
+        { $$ = $1; }
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        { 
-            printf("Array identifier %s\n", $1);
-        }
+        { $$ = template("%s[%s]", $1, $3); }
     | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
-        { 
-            printf("Array identifier %s with index\n", $1);
-        }
+        { $$ = template("%s[]", $1); }
     | OP_HASH IDENTIFIER
-        {
-            printf("Private identifier \n");
-        }
+        { $$ = $2; }
     | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        {
-            printf("Private array identifier\n");
-        }
+        { $$ = template("%s[%s]", $2, $4); }
     | OP_HASH IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
-        {
-            printf("Private array identifier with index\n");
-        }
-    
+        { $$ = template("%s[]", $2); }
     ;
 
 //function declarations
@@ -305,9 +295,9 @@ lvalue
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("%s[%s]", $1, $3); }
     | OP_HASH IDENTIFIER
-        { $$ = template("#%s",$2); }
+        { $$ = template("self->%s", $2); } 
     | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("#%s[%s]", $2, $4); }
+        { $$ = template("self->%s[%s]", $2, $4); }  
     ;
 
 compound_stmt
@@ -420,28 +410,48 @@ list_comp_array
 
 member_decls
     : /* empty */
+        { $$ = ""; }  // Empty struct has no members
     | member_decl_list
+        { $$ = $1; }  // Pass up member declarations
     ;
 
 member_decl_list
     : member_decl
+        { $$ = $1; }  // Single member
     | member_decl_list member_decl
+        { $$ = template("%s\n%s", $1, $2); }  // Multiple members
     ;
 
 member_decl
     : id_list COLON type SEMICOLON
+        { $$ = template("%s %s;", $3, $1); }  // Member declaration in C struct format
     ;
 
 method_decls
     : /* empty */
+        { $$ = ""; }
     | method_decls method_decl
+        { $$ = template("%s\n%s", $1, $2); }
     ;
 
 method_decl
     : KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS
       return_type_decl COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
+    {
+        /* Transform Lambda method to C99 member function with struct self pointer */
+        $$ = template(
+            "%s %s_%s(struct %s *self%s%s) {\n%s\n%s\n}",
+            $6,              /* return type */
+            "CURRENT_COMP",  /* will be replaced with actual compound type name */
+            $2,              /* method name */
+            "CURRENT_COMP",  /* struct type name for self parameter */
+            ($4[0] != '\0') ? ", " : "",  /* add comma only if params exist */
+            $4,              /* parameter list */
+            $8,              /* local declarations */
+            $9              /* statements */
+        );
+    }
     ;
-
 
 const_decls
     : /* empty */
@@ -463,11 +473,11 @@ const_decl
 
 return_opt
     : /* empty */
-        { printf("No return statement\n"); }
+        { $$ = ""; }  // No return statement
     | KEYWORD_RETURN SEMICOLON
-        { printf("Return statement with no value\n"); }
+        { $$ = template("return;"); }  // Void return
     | KEYWORD_RETURN expr SEMICOLON
-        { printf("Return statement with value\n"); }
+        { $$ = template("return %s;", $2); }  // Return with value
     ;
 
 else_part
@@ -612,13 +622,13 @@ type
     | KEYWORD_BOOL
         {$$ = template("%s", "int");}
     | KEYWORD_COMP
-        {$$ = template("%s", "typedef struct {");}
+        {$$ = template("%s", "typedef struct ");}
     | IDENTIFIER
         { printf("Type: user-defined type %s\n", $1); }
     | LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type
-        { printf("Type: array of size %d\n", $2); }
+        { $$ = template("%s[%d]", $5, $2); }
     | LEFT_BRACKET RIGHT_BRACKET COLON type
-        { printf("Type: array of unspecified size\n"); }
+        { $$ = template("%s[]", $4); }
     ;
 
 %%
