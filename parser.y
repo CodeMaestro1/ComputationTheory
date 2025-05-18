@@ -87,8 +87,7 @@
 %type <stringVal> const_decl const_decls
 %type <stringVal> main_func
 %type <stringVal> func_decls
-%type <stringVal> id_list
-%type <stringVal> field_id
+%type <stringVal> id_list 
 %type <stringVal> member_decl member_decl_list
 %type <stringVal> member_decls method_decl method_decls
 
@@ -295,10 +294,17 @@ lvalue
     | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("%s[%s]", $1, $3); }
     | OP_HASH IDENTIFIER
-        { $$ = template("self->%s", $2); } 
+        { $$ = template("self->%s", $2); }
     | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("self->%s[%s]", $2, $4); }  
+        { $$ = template("self->%s[%s]", $2, $4); }
+    | IDENTIFIER DOT OP_HASH IDENTIFIER
+        { $$ = template("%s.%s", $1, $4); }  // obj.#member
+    | OP_HASH IDENTIFIER DOT IDENTIFIER
+        { $$ = template("self->%s.%s", $2, $4); }  // #member.field
+    | OP_HASH IDENTIFIER DOT OP_HASH IDENTIFIER
+        { $$ = template("self->%s.%s", $2, $5); }  // #member.#field
     ;
+
 
 compound_stmt
     : KEYWORD_IF LEFT_PARENTHESIS expr RIGHT_PARENTHESIS COLON stmts else_part 
@@ -488,11 +494,14 @@ else_part
     ;
 
 function_call
-    : primary LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s(%s)", $1, $3); }
-    | primary DOT field_id LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s.%s(%s)", $1, $3, $5); }
+    : IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s(%s)", $1, $3); }  // simple function call
+    | postfix DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s.%s(%s)", $1, $3, $5); }  // method call
+    | OP_HASH IDENTIFIER DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("self->%s.%s(%s)", $2, $4, $6); }  // private method call
     ;
+
 
 arg_list_opt
     : /*empty */
@@ -575,17 +584,13 @@ primary
     : IDENTIFIER
         { $$ = $1; }
     | OP_HASH IDENTIFIER
-        { $$ = template("#%s",$2); }
+        { $$ = template("self->%s", $2); }  // private member access
+    | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("self->%s[%s]", $2, $4); }  // private array access
     | literal
+        { $$ = $1; }
     | LEFT_PARENTHESIS expr RIGHT_PARENTHESIS
         { $$ = template("(%s)", $2); }
-    ;
-
-field_id
-    : IDENTIFIER
-        { $$ = $1; }
-    | OP_HASH IDENTIFIER
-        { $$ = template("#%s", $2); }
     ;
 
 postfix
@@ -593,11 +598,20 @@ postfix
         { $$ = $1; }
     | postfix LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("%s[%s]", $1, $3); }
-    | postfix DOT field_id
-        { $$ = template("%s.%s", $1, $3); }
-    | postfix LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s(%s)", $1, $3); }
+    | postfix DOT IDENTIFIER
+        { $$ = template("%s.%s", $1, $3); }  // public field access
+    | postfix DOT OP_HASH IDENTIFIER
+        { $$ = template("%s.%s", $1, $4); }  // private field access
+    | postfix DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s.%s(%s)", $1, $3, $5); }  // public method call
+    | IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s(%s)", $1, $3); }  // direct function call
+    | OP_HASH IDENTIFIER DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("self->%s.%s(%s)", $2, $4, $6); }  // private method call from inside class
+    | OP_HASH IDENTIFIER DOT IDENTIFIER  
+        { $$ = template("self->%s.%s", $2, $4); }  // private field access
     ;
+
 
 literal
     : CONST_INT
