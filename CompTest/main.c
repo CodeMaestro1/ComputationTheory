@@ -3,105 +3,104 @@
 #include <math.h>
 #include "lambdalib.h"
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 
-void merge(int left[], int right[], int result[], int leftSize, int rightSize)
+
+int next_random;
+
+
+int next()
 {
 
-    int i, j, k;
-    i = 0;
-    j = 0;
-    k = 0;
-    while((i < leftSize) && (j < rightSize))
+    next_random = (next_random * 1103515245 + 12345) % -2147483648;
+    if(next_random < 0)
     {
-        if(left[i] <= right[j])
-        {
-            result[k] = left[i];
-            i = i + 1;
+        next_random = -next_random;
 
-        }
-        else
-        {
-            result[k] = right[j];
-            j = j + 1;
-
-        }
-        k = k + 1;
-    }
-    while(i < leftSize)
-    {
-        result[k] = left[i];
-        i = i + 1;
-        k = k + 1;
-    }
-    while(j < rightSize)
-    {
-        result[k] = right[j];
-        j = j + 1;
-        k = k + 1;
     }
 
 }
 
-void mergeSort(int arr[], int temp[], int size)
+void swap(int a[], int i, int j)
 {
 
-    int mid;
-    int left;
-    int right;
-    int i;
-    if(size <= 1)
+    int temp;
+    temp = a[i];
+    a[i] = a[j];
+    a[j] = temp;
+
+}
+
+void quickSort(int a[], int low, int high)
+{
+
+    int pivot, i, j;
+    if(low < high)
     {
-        return;
+        pivot = low;
+        i = low;
+        j = high;
+        while(i < j)
+        {
+            while(a[i] <= a[pivot] && i < high)
+            {
+                i = i + 1;
+            }
+            while(a[j] > a[pivot])
+            {
+                j = j - 1;
+            }
+            if(i < j)
+            {
+                swap(a, i, j);
+
+            }
+        }
+        swap(a, pivot, j);
+        quickSort(a, low, j - 1);
+        quickSort(a, j + 1, high);
 
     }
-    mid = size / 2;
-    for(int i = 0; i < mid; i++)
+
+}
+
+void printArray(int a[], int size)
+{
+
+    for(int i = 0; i < size; i++)
     {
-        left[i] = arr[i];
+        writeInteger(a[i]);
+        if(i == size - 1)
+        {
+            continue;
+
+        }
+        writeStr(", ");
     }
-    for(int i = 0; i < (size - mid); i++)
-    {
-        right[i] = arr[mid + i];
-    }
-    mergeSort(left, temp, mid);
-    mergeSort(right, temp, size - mid);
-    merge(left, right, arr, mid, size - mid);
+    writeStr("\n");
 
 }
 int main()
 {
 
-    int arr[8];
-    int temp[8];
-    int i;
-    arr[0] = 64;
-    arr[1] = 34;
-    arr[2] = 25;
-    arr[3] = 12;
-    arr[4] = 22;
-    arr[5] = 11;
-    arr[6] = 90;
-    arr[7] = 1;
-    writeStr("Original array: ");
-    for(int i = 0; i < 8; i++)
+    const int aSize = 100;
+    int a[100]; //TODO: FIX IT!!!
+    writeStr("Give a seed for the random number generator: ");
+    readInteger(next_random);
+    for(int i = 0; i < aSize; i++)
     {
-        writeInteger(arr[i]);
-        writeStr(" ");
+        a[i] = next() % 1000;
     }
-    writeStr("\n");
-    mergeSort(arr, temp, 8);
+    writeStr("Random array generated: ");
+    printArray(a, aSize);
+    quickSort(a, 0, aSize - 1);
     writeStr("Sorted array: ");
-    for(int i = 0; i < 8; i++)
-    {
-        writeInteger(arr[i]);
-        writeStr(" ");
-    }
-    writeStr("\n");
+    printArray(a, aSize);
 
     return 0;
 }
+
+
