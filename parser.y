@@ -153,6 +153,8 @@ var_decls
 var_decl
     : id_list COLON type SEMICOLON
         { $$ = template("%s %s;", $3, $1);}
+    | IDENTIFIER OP_ASSIGN expr SEMICOLON
+        { $$ = template("%s = %s;", $1, $3); }
     ;
 
 id_list
@@ -315,18 +317,33 @@ postfix
         { $$ = $1; }
     ;
 
+
+member_access
+    : OP_HASH IDENTIFIER
+        { $$ = template("self->%s", $2); }
+    | primary DOT IDENTIFIER
+        { $$ = template("%s.%s", $1, $3); }
+    | primary DOT OP_HASH IDENTIFIER
+        { $$ = template("%s.self->%s", $1, $4); }
+    | array_access DOT OP_HASH IDENTIFIER
+        { $$ = template("%s.self->%s", $1, $4); }
+    | array_access DOT IDENTIFIER
+        { $$ = template("%s.%s", $1, $3); }
+    | member_access DOT IDENTIFIER
+        { $$ = template("%s.%s", $1, $3); }
+    | member_access DOT OP_HASH IDENTIFIER
+        { $$ = template("%s.self->%s", $1, $4); }
+    ;
+
 array_access
     : IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("%s[%s]", $1, $3); }
     | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("self->%s[%s]", $2, $4); }
-    ;
-
-member_access
-    : OP_HASH IDENTIFIER // Rule 57
-        { $$ = template("self->%s", $2); }
-    | primary DOT IDENTIFIER // Rule 58
-        { $$ = template("%s.%s", $1, $3); }
+    | primary DOT IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("%s.%s[%s]", $1, $3, $5); }
+    | member_access DOT IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("%s.%s[%s]", $1, $3, $5); }
     ;
 
 function_call
