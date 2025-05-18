@@ -1,0 +1,131 @@
+parser.y: warning: 3 shift/reduce conflicts [-Wconflicts-sr]
+parser.y: warning: shift/reduce conflict on token LEFT_BRACKET [-Wcounterexamples]
+  First example: comp_decls const_decls var_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls IDENTIFIER • LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                     $end
+         ↳ 1: comp_decls const_decls var_decls main_func                                                                                                                                                                                                                   main_func
+                                               ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls                                                                                                stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                      ↳ 30: local_decls var_decl
+                                                                                                                                        ↳ 8: id_list                                                        COLON type SEMICOLON
+                                                                                                                                             ↳ 9: id_decl
+                                                                                                                                                  ↳ 12: array_id
+                                                                                                                                                        ↳ 15: IDENTIFIER array_dims
+                                                                                                                                                                         ↳ 17: • LEFT_BRACKET RIGHT_BRACKET
+  Second example: comp_decls const_decls var_decls func_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls IDENTIFIER • LEFT_BRACKET expr RIGHT_BRACKET SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                         $end
+         ↳ 1: comp_decls const_decls var_decls func_decls main_func
+                                                          ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                   return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                             ↳ 33: stmt                                                                                        stmts
+                                                                                                                                                   ↳ 34: simple_stmt
+                                                                                                                                                         ↳ 37: postfix                                                               SEMICOLON
+                                                                                                                                                               ↳ 51: array_access
+                                                                                                                                                                     ↳ 54: postfix                   LEFT_BRACKET expr RIGHT_BRACKET
+                                                                                                                                                                           ↳ 50: primary
+                                                                                                                                                                                 ↳ 110: IDENTIFIER •
+parser.y: warning: shift/reduce conflict on token LEFT_BRACKET [-Wcounterexamples]
+time limit exceeded: 6.000000
+  First example: comp_decls const_decls var_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls IDENTIFIER • LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                               $end
+         ↳ 1: comp_decls const_decls var_decls main_func                                                                                                                                                                                                                             main_func
+                                               ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls                                                                                                          stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                      ↳ 30: local_decls var_decl
+                                                                                                                                        ↳ 8: id_list                                                                  COLON type SEMICOLON
+                                                                                                                                             ↳ 9: id_decl
+                                                                                                                                                  ↳ 12: array_id
+                                                                                                                                                        ↳ 15: IDENTIFIER array_dims
+                                                                                                                                                                         ↳ 18: • LEFT_BRACKET CONST_INT RIGHT_BRACKET
+  Second example: comp_decls const_decls var_decls func_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls IDENTIFIER • LEFT_BRACKET expr RIGHT_BRACKET SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                         $end
+         ↳ 1: comp_decls const_decls var_decls func_decls main_func
+                                                          ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                   return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                             ↳ 33: stmt                                                                                        stmts
+                                                                                                                                                   ↳ 34: simple_stmt
+                                                                                                                                                         ↳ 37: postfix                                                               SEMICOLON
+                                                                                                                                                               ↳ 51: array_access
+                                                                                                                                                                     ↳ 54: postfix                   LEFT_BRACKET expr RIGHT_BRACKET
+                                                                                                                                                                           ↳ 50: primary
+                                                                                                                                                                                 ↳ 110: IDENTIFIER •
+parser.y: warning: shift/reduce conflict on token DOT [-Wcounterexamples]
+  First example: comp_decls const_decls var_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls primary • DOT IDENTIFIER SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                       $end
+         ↳ 1: comp_decls const_decls var_decls main_func                                                                                                                                                                                     main_func
+                                               ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                  return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                  ↳ 33: stmt                                                       stmts
+                                                                                                                                        ↳ 34: simple_stmt
+                                                                                                                                              ↳ 37: postfix                              SEMICOLON
+                                                                                                                                                    ↳ 52: member_access
+                                                                                                                                                          ↳ 56: primary • DOT IDENTIFIER
+  Second example: comp_decls const_decls var_decls func_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls primary • DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                              $end
+         ↳ 1: comp_decls const_decls var_decls func_decls main_func
+                                                          ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                                        return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                             ↳ 33: stmt                                                                                                             stmts
+                                                                                                                                                   ↳ 34: simple_stmt
+                                                                                                                                                         ↳ 37: postfix                                                                                    SEMICOLON
+                                                                                                                                                               ↳ 53: function_call
+                                                                                                                                                                     ↳ 58: postfix         DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+                                                                                                                                                                           ↳ 50: primary •
+parser.y: warning: shift/reduce conflict on token LEFT_BRACKET [-Wcounterexamples]
+  First example: comp_decls const_decls var_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls OP_HASH IDENTIFIER • LEFT_BRACKET RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                             $end
+         ↳ 1: comp_decls const_decls var_decls main_func                                                                                                                                                                                                                           main_func
+                                               ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls                                                                                                        stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                      ↳ 30: local_decls var_decl
+                                                                                                                                        ↳ 8: id_list                                                                COLON type SEMICOLON
+                                                                                                                                             ↳ 9: id_decl
+                                                                                                                                                  ↳ 12: array_id
+                                                                                                                                                        ↳ 16: OP_HASH IDENTIFIER array_dims
+                                                                                                                                                                                 ↳ 17: • LEFT_BRACKET RIGHT_BRACKET
+  Second example: comp_decls const_decls var_decls func_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls OP_HASH IDENTIFIER • LEFT_BRACKET expr RIGHT_BRACKET SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                $end
+         ↳ 1: comp_decls const_decls var_decls func_decls main_func
+                                                          ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                          return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                             ↳ 33: stmt                                                                                               stmts
+                                                                                                                                                   ↳ 34: simple_stmt
+                                                                                                                                                         ↳ 37: postfix                                                                      SEMICOLON
+                                                                                                                                                               ↳ 51: array_access
+                                                                                                                                                                     ↳ 54: postfix                          LEFT_BRACKET expr RIGHT_BRACKET
+                                                                                                                                                                           ↳ 52: member_access
+                                                                                                                                                                                 ↳ 55: OP_HASH IDENTIFIER •
+parser.y: warning: shift/reduce conflict on token LEFT_BRACKET [-Wcounterexamples]
+time limit exceeded: 6.000000
+  First example: comp_decls const_decls var_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls OP_HASH IDENTIFIER • LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                       $end
+         ↳ 1: comp_decls const_decls var_decls main_func                                                                                                                                                                                                                                     main_func
+                                               ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls                                                                                                                  stmts return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                      ↳ 30: local_decls var_decl
+                                                                                                                                        ↳ 8: id_list                                                                          COLON type SEMICOLON
+                                                                                                                                             ↳ 9: id_decl
+                                                                                                                                                  ↳ 12: array_id
+                                                                                                                                                        ↳ 16: OP_HASH IDENTIFIER array_dims
+                                                                                                                                                                                 ↳ 18: • LEFT_BRACKET CONST_INT RIGHT_BRACKET
+  Second example: comp_decls const_decls var_decls func_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls OP_HASH IDENTIFIER • LEFT_BRACKET expr RIGHT_BRACKET SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                $end
+         ↳ 1: comp_decls const_decls var_decls func_decls main_func
+                                                          ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                          return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                             ↳ 33: stmt                                                                                               stmts
+                                                                                                                                                   ↳ 34: simple_stmt
+                                                                                                                                                         ↳ 37: postfix                                                                      SEMICOLON
+                                                                                                                                                               ↳ 51: array_access
+                                                                                                                                                                     ↳ 54: postfix                          LEFT_BRACKET expr RIGHT_BRACKET
+                                                                                                                                                                           ↳ 52: member_access
+                                                                                                                                                                                 ↳ 55: OP_HASH IDENTIFIER •

@@ -70,7 +70,6 @@
 %type <stringVal> term
 %type <stringVal> factor
 %type <stringVal> expr
-%type <stringVal> function_call
 %type <stringVal> primary postfix
 %type <stringVal> arg_list arg_list_opt
 %type <stringVal> lvalue
@@ -91,8 +90,14 @@
 %type <stringVal> member_decl member_decl_list
 %type <stringVal> member_decls method_decl method_decls
 
-%start program
+%type <stringVal> simple_id array_id
+%type <stringVal> array_access member_access
+%type <stringVal> function_call
+%type <stringVal> array_dims
 
+
+
+%start program
 %%
 
 /* Grammar rules begin here */
@@ -142,50 +147,58 @@ var_decls
     : /* empty */
         { $$ = ""; }
     | var_decls var_decl
-        { 
-          // Append the variable declaration to existing declarations
-          $$ = template("%s\n%s", $1, $2);
-        }
+        { $$ = template("%s\n%s", $1, $2);}
     ;
 
 var_decl
     : id_list COLON type SEMICOLON
-        {
-          // Transform Lambda variable declaration to C99 format
-          $$ = template("%s %s;", $3, $1);
-        }
+        { $$ = template("%s %s;", $3, $1);}
     ;
 
 id_list
     : id_decl
         { $$ = $1; }
     | id_list COMMA id_decl
+        { $$ = template("%s, %s", $1, $3); }
     ;
 
 id_decl
+    : simple_id
+        { $$ = $1; }
+    | array_id
+        { $$ = $1; }
+    ;
+
+simple_id
     : IDENTIFIER
         { $$ = $1; }
-    | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("%s[%s]", $1, $3); }
-    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
-        { $$ = template("%s[]", $1); }
-    | OP_HASH IDENTIFIER
+    | OP_HASH IDENTIFIER  
         { $$ = $2; }
-    | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("%s[%s]", $2, $4); }
-    | OP_HASH IDENTIFIER LEFT_BRACKET RIGHT_BRACKET
-        { $$ = template("%s[]", $2); }
     ;
+
+
+array_id
+    : IDENTIFIER array_dims
+        { $$ = template("%s%s", $1, $2); }
+    | OP_HASH IDENTIFIER array_dims
+        { $$ = template("self->%s%s", $2, $3); }
+    ;
+
+// Add new rule for array dimensions
+array_dims
+    : LEFT_BRACKET expr RIGHT_BRACKET
+        { $$ = template("[%S]", $2); }
+    | LEFT_BRACKET RIGHT_BRACKET
+        { $$ = template("[]"); }
+    ;
+
 
 //function declarations
 func_decls
     : /* empty */
         { $$ = ""; }  // Empty string for no function declarations
     | func_decls func_decl
-        { 
-          // Append the function declaration to existing declarations
-          $$ = template("%s\n\n%s", $1, $2);
-        }
+        { $$ = template("%s\n\n%s", $1, $2);}
     ;
 
 func_decl
@@ -235,15 +248,9 @@ local_decls
     : /* empty */
         { $$ = ""; }  // Empty declarations -> empty string
     | local_decls var_decl
-        { 
-          // Append the variable declaration to existing declarations
-          $$ = template("%s\n%s", $1, $2);
-        }
+        { $$ = template("%s\n%s", $1, $2);}
     | local_decls const_decl
-        {
-          // Append the constant declaration to existing declarations
-          $$ = template("%s\n%s", $1, $2);
-        }
+        { $$ = template("%s\n%s", $1, $2);}
     ;
 
 stmts
@@ -263,7 +270,7 @@ stmt
 simple_stmt
     : assignment_statement
         { $$ = $1; }
-    | function_call SEMICOLON
+    | postfix SEMICOLON
         { $$ = template("%s;", $1); }
     | KEYWORD_BREAK SEMICOLON
         { $$ = template("break;"); }
@@ -291,18 +298,46 @@ assignment_statement
 lvalue
     : IDENTIFIER
         { $$ = $1; }
-    | IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+    | array_access
+        { $$ = $1; }
+    | member_access  
+        { $$ = $1; }
+    ;
+
+postfix
+    : primary
+        { $$ = $1; }
+    | array_access
+        { $$ = $1; } 
+    | member_access
+        { $$ = $1; }
+    | function_call
+        { $$ = $1; }
+    ;
+
+array_access
+    : IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("%s[%s]", $1, $3); }
-    | OP_HASH IDENTIFIER
-        { $$ = template("self->%s", $2); }
     | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
         { $$ = template("self->%s[%s]", $2, $4); }
-    | IDENTIFIER DOT OP_HASH IDENTIFIER
-        { $$ = template("%s.%s", $1, $4); }  // obj.#member
-    | OP_HASH IDENTIFIER DOT IDENTIFIER
-        { $$ = template("self->%s.%s", $2, $4); }  // #member.field
-    | OP_HASH IDENTIFIER DOT OP_HASH IDENTIFIER
-        { $$ = template("self->%s.%s", $2, $5); }  // #member.#field
+    ;
+
+member_access
+    : OP_HASH IDENTIFIER // Rule 57
+        { $$ = template("self->%s", $2); }
+    | primary DOT IDENTIFIER // Rule 58
+        { $$ = template("%s.%s", $1, $3); }
+    ;
+
+function_call
+    : IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s(%s)", $1, $3); }
+    | primary DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s.%s(%s)", $1, $3, $5); }
+    | OP_HASH IDENTIFIER DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("self->%s.%s(%s)", $2, $4, $6); }
+    | array_access DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+        { $$ = template("%s.%s(%s)", $1, $3, $5); }
     ;
 
 
@@ -463,10 +498,7 @@ const_decls
     : /* empty */
         {$$ = "";}
     | const_decls const_decl
-        { 
-          // Append the constant declaration to existing declarations
-          $$ = template("%s\n%s", $1, $2);
-        }
+        { $$ = template("%s\n%s", $1, $2); }
     ;
 
 const_decl
@@ -491,15 +523,6 @@ else_part
         { $$ = ""; }
     | KEYWORD_ELSE COLON stmts
         { $$ = template("else {\n%s\n}", $3); }
-    ;
-
-function_call
-    : IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s(%s)", $1, $3); }  // simple function call
-    | postfix DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s.%s(%s)", $1, $3, $5); }  // method call
-    | OP_HASH IDENTIFIER DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("self->%s.%s(%s)", $2, $4, $6); }  // private method call
     ;
 
 
@@ -580,36 +603,14 @@ factor
         { $$ = template("pow(%s, %s)", $1, $3); }
     ;
 
+
 primary
     : IDENTIFIER
         { $$ = $1; }
-    | OP_HASH IDENTIFIER
-        { $$ = template("self->%s", $2); }  // private member access
-    | OP_HASH IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("self->%s[%s]", $2, $4); }  // private array access
     | literal
         { $$ = $1; }
     | LEFT_PARENTHESIS expr RIGHT_PARENTHESIS
         { $$ = template("(%s)", $2); }
-    ;
-
-postfix
-    : primary
-        { $$ = $1; }
-    | postfix LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("%s[%s]", $1, $3); }
-    | postfix DOT IDENTIFIER
-        { $$ = template("%s.%s", $1, $3); }  // public field access
-    | postfix DOT OP_HASH IDENTIFIER
-        { $$ = template("%s.%s", $1, $4); }  // private field access
-    | postfix DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s.%s(%s)", $1, $3, $5); }  // public method call
-    | IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s(%s)", $1, $3); }  // direct function call
-    | OP_HASH IDENTIFIER DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("self->%s.%s(%s)", $2, $4, $6); }  // private method call from inside class
-    | OP_HASH IDENTIFIER DOT IDENTIFIER  
-        { $$ = template("self->%s.%s", $2, $4); }  // private field access
     ;
 
 
@@ -628,21 +629,21 @@ literal
 
 type
     : KEYWORD_INTEGER
-        {$$ = template("%s", "int");}
+        {$$ = template("int");}
     | KEYWORD_SCALAR
-        {$$ = template("%s","double");}
+        {$$ = template("double");}
     | KEYWORD_STR
-        {$$ = template("%s", "char*");}
+        {$$ = template("char*");}
     | KEYWORD_BOOL
-        {$$ = template("%s", "int");}
+        {$$ = template("int");}
     | KEYWORD_COMP
-        {$$ = template("%s", "typedef struct ");}
+        {$$ = template("struct");}
     | IDENTIFIER
-        { printf("Type: user-defined type %s\n", $1); }
+        {$$ = template("struct %s", $1);}  // Changed to handle custom types like Address
     | LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type
-        { $$ = template("%s[%d]", $5, $2); }
+        {$$ = template("%s[%d]", $5, $2);}
     | LEFT_BRACKET RIGHT_BRACKET COLON type
-        { $$ = template("%s[]", $4); }
+        {$$ = template("%s[]", $4);}
     ;
 
 %%
