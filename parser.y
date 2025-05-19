@@ -4,7 +4,7 @@
   #include <string.h>
   #include "cgen.h"
 
-
+  extern char* yytext;
   char* current_struct_name = NULL;
   void yyerror(char const* pat, ...);
   int yylex(void);
@@ -23,6 +23,7 @@
     struct {
         char* func_ptr;
         char* func_impl;
+        char* func_init;
     } methodParts;
 }
 
@@ -165,12 +166,19 @@ comp_decl
                 "%s\n"  // member declarations
                 "%s\n"  // method declarations (only function pointers)
                 "} %s;\n\n"
-                "%s",   // method implementations (outside struct)
-                $2,    // struct name
+                "%s\n"  // method implementations (actual functions)
+                "// Initialize struct with function pointers\n"
+                "const %s ctor_%s = {\n"
+                "    %s\n"  // function pointer initializations
+                "};\n",
+                $2,    // struct name (1)
                 $5,    // member declarations
                 $6.func_ptr,    // method declarations (function pointers)
                 $2,    // typedef name
-                $6.func_impl   // method implementations (actual functions)
+                $6.func_impl,   // method implementations
+                $2,    // struct name (2) for initializer
+                $2,    // struct name (3) for initializer variable
+                $6.func_init    // function pointer initializations
             );
             free(current_struct_name);
             current_struct_name = NULL;
@@ -213,12 +221,20 @@ simple_id
         { $$ = $2; }
     ;
 
-
 array_id
     : IDENTIFIER array_dims
         { $$ = template("%s%s", $1, $2); }
     | OP_HASH IDENTIFIER array_dims
-        { $$ = template("self->%s%s", $2, $3); }
+        { 
+            // Check if we're inside member_decl rule
+            if (strstr(yytext, ":")) {
+                // This is a declaration (has a colon)
+                $$ = template("%s%s", $2, $3);
+            } else {
+                // This is a member access (no colon)
+                $$ = template("%s%s", $2, $3);
+            }
+        }
     ;
 
 array_dims
@@ -251,12 +267,13 @@ func_decl
     {
         /* Transform Lambda function to C99 function */
         $$ = template(
-            "%s %s(%s) {\n%s\n%s\n}",
+            "%s %s(%s) {\n%s\n%s\n%s\n}",
             $6,    /* return type */
             $2,    /* function name */
             $4,    /* parameter list (empty string if no parameters) */
             $8,    /* local declarations */
-            $9     /* function body statements */
+            $9,     /* function body statements */
+            $10   /* return statement */
         );
     }
     ;
@@ -365,15 +382,15 @@ member_access
     | primary DOT IDENTIFIER
         { $$ = template("%s.%s", $1, $3); }
     | primary DOT OP_HASH IDENTIFIER
-        { $$ = template("%s.self->%s", $1, $4); }
+        { $$ = template("%s.%s", $1, $4); }  
     | array_access DOT OP_HASH IDENTIFIER
-        { $$ = template("%s.self->%s", $1, $4); }
+        { $$ = template("%s.%s", $1, $4); }  
     | array_access DOT IDENTIFIER
         { $$ = template("%s.%s", $1, $3); }
     | member_access DOT IDENTIFIER
         { $$ = template("%s.%s", $1, $3); }
     | member_access DOT OP_HASH IDENTIFIER
-        { $$ = template("%s.self->%s", $1, $4); }
+        { $$ = template("%s.%s", $1, $4); } 
     ;
 
 array_access
@@ -530,12 +547,17 @@ method_decls
     : /* empty */
         { 
             $$.func_ptr = "";
-            $$.func_impl = ""; 
+            $$.func_impl = "";
+            $$.func_init = ""; 
         }
     | method_decls method_decl
         { 
             $$.func_ptr = template("%s\n%s", $1.func_ptr, $2.func_ptr);
             $$.func_impl = template("%s\n%s", $1.func_impl, $2.func_impl);
+            $$.func_init = template("%s%s%s",
+                $1.func_init,
+                ($1.func_init[0] != '\0' && $2.func_init[0] != '\0') ? ",\n    " : "",
+                $2.func_init);
         }
     ;
 
@@ -550,13 +572,20 @@ method_decl
         );
 
         $$.func_impl = template(
-            "\n%s %s_%s(struct %s *self%s%s) {\n%s\n%s\n%s\n}",
+            "\n%s %s(struct %s *self%s%s) {\n%s\n%s\n%s\n}",
             $6,                 // return type
-            current_struct_name, // struct name prefix
             $2,                 // method name
             current_struct_name, // self parameter type
             ($4[0] != '\0') ? ", " : "", $4,  // other parameters
-            $8, $9, $10        // function body
+            $8, 
+            $9, 
+            $10 
+        );
+
+        $$.func_init = template(
+            ".%s = %s ",
+            $2, // struct name
+            $2  // function pointer
         );
     }
 ;

@@ -4,34 +4,19 @@
 
 #include "lambdalib.h"
 
-typedef struct
+typedef struct Address
 {
     char* street;
     int number;
     char* city;
 
     void (*setAddress)(struct Address *self, char* s, int n, char* c);
-    void Address setAddress(struct Address *self, char* s, int n, char* c)
-    {
-
-        self->street = s;
-        self->number = n;
-        self->city = c;
-
-
-    }
     void (*printAddress)(struct Address *self);
-    void Address printAddress(struct Address *self)
-    {
-
-        write("Address: %s %d, %s\n", self->street, self->number, self->city);
-
-
-    }
 } Address;
 
-void (*setAddress)(struct Address *self, char* s, int n, char* c);
-void Address setAddress(struct Address *self, char* s, int n, char* c)
+
+
+void setAddress(struct Address *self, char* s, int n, char* c)
 {
 
     self->street = s;
@@ -40,15 +25,22 @@ void Address setAddress(struct Address *self, char* s, int n, char* c)
 
 
 }
-void (*printAddress)(struct Address *self);
-void Address printAddress(struct Address *self)
+
+void printAddress(struct Address *self)
 {
 
     write("Address: %s %d, %s\n", self->street, self->number, self->city);
 
 
 }
-typedef struct
+// Initialize struct with function pointers
+const struct Address Address_init =
+{
+    .setAddress = setAddress,
+    .printAddress = printAddress
+};
+
+typedef struct Person
 {
     char* firstName, lastName;
     char* email;
@@ -56,30 +48,12 @@ typedef struct
     Address address;
 
     void (*setPerson)(struct Person *self, char* fn, char* ln, char* email, int phone, Address addr);
-    void Person setPerson(struct Person *self, char* fn, char* ln, char* email, int phone, Address addr)
-    {
-
-        self->firstName = fn;
-        self->lastName = ln;
-        self->email = email;
-        self->phone = phone;
-        self->address = addr;
-
-
-    }
     void (*printPersonInfo)(struct Person *self);
-    void Person printPersonInfo(struct Person *self)
-    {
-
-        write("%s %s, email: %s phone: %d\n", self->firstName, self->lastName, self->email, self->phone);
-        self->address.printAddress();
-
-
-    }
 } Person;
 
-void (*setPerson)(struct Person *self, char* fn, char* ln, char* email, int phone, Address addr);
-void Person setPerson(struct Person *self, char* fn, char* ln, char* email, int phone, Address addr)
+
+
+void setPerson(struct Person *self, char* fn, char* ln, char* email, int phone, Address addr)
 {
 
     self->firstName = fn;
@@ -90,8 +64,8 @@ void Person setPerson(struct Person *self, char* fn, char* ln, char* email, int 
 
 
 }
-void (*printPersonInfo)(struct Person *self);
-void Person printPersonInfo(struct Person *self)
+
+void printPersonInfo(struct Person *self)
 {
 
     write("%s %s, email: %s phone: %d\n", self->firstName, self->lastName, self->email, self->phone);
@@ -99,7 +73,14 @@ void Person printPersonInfo(struct Person *self)
 
 
 }
-typedef struct
+// Initialize struct with function pointers
+const struct Person Person_init =
+{
+    .setPerson = setPerson,
+    .printPersonInfo = printPersonInfo
+};
+
+typedef struct Book
 {
     char* title, isbn;
     Person author;
@@ -107,32 +88,12 @@ typedef struct
     double price;
 
     void (*setBook)(struct Book *self, char* t, Person a, int numOfCopies, double price);
-    void Book setBook(struct Book *self, char* t, Person a, int numOfCopies, double price)
-    {
-
-        self->title = t;
-        self->author = a;
-        self->numOfCopies = numOfCopies;
-        self->price = price;
-
-
-    }
     void (*printBook)(struct Book *self);
-    void Book printBook(struct Book *self)
-    {
-
-        write("Title: %s\n", self->title);
-        writeStr("Author:");
-        self->author.printPersonInfo();
-        write("Price:%f\n", self->price);
-        write("Number of available copies: %d\n", self->numOfCopies);
-
-
-    }
 } Book;
 
-void (*setBook)(struct Book *self, char* t, Person a, int numOfCopies, double price);
-void Book setBook(struct Book *self, char* t, Person a, int numOfCopies, double price)
+
+
+void setBook(struct Book *self, char* t, Person a, int numOfCopies, double price)
 {
 
     self->title = t;
@@ -142,8 +103,8 @@ void Book setBook(struct Book *self, char* t, Person a, int numOfCopies, double 
 
 
 }
-void (*printBook)(struct Book *self);
-void Book printBook(struct Book *self)
+
+void printBook(struct Book *self)
 {
 
     write("Title: %s\n", self->title);
@@ -154,7 +115,14 @@ void Book printBook(struct Book *self)
 
 
 }
-typedef struct
+// Initialize struct with function pointers
+const struct Book Book_init =
+{
+    .setBook = setBook,
+    .printBook = printBook
+};
+
+typedef struct Order
 {
     int orderNum;
     Book book;
@@ -163,29 +131,12 @@ typedef struct
     int delivered;
 
     void (*setOrder)(struct Order *self, int orNum, Book b, int q, Address sh, int del);
-    void Order setOrder(struct Order *self, int orNum, Book b, int q, Address sh, int del)
-    {
-
-        self->orderNum = orNum;
-        self->book = b;
-        self->quantity = q;
-        self->shippingAddress = sh;
-        self->delivered = del;
-
-
-    }
     void (*printOrder)(struct Order *self);
-    void Order printOrder(struct Order *self)
-    {
-
-        write("Order Num: %d\n", self->orderNum);
-
-
-    }
 } Order;
 
-void (*setOrder)(struct Order *self, int orNum, Book b, int q, Address sh, int del);
-void Order setOrder(struct Order *self, int orNum, Book b, int q, Address sh, int del)
+
+
+void setOrder(struct Order *self, int orNum, Book b, int q, Address sh, int del)
 {
 
     self->orderNum = orNum;
@@ -196,72 +147,38 @@ void Order setOrder(struct Order *self, int orNum, Book b, int q, Address sh, in
 
 
 }
-void (*printOrder)(struct Order *self);
-void Order printOrder(struct Order *self)
+
+void printOrder(struct Order *self)
 {
 
     write("Order Num: %d\n", self->orderNum);
 
 
 }
-typedef struct
+// Initialize struct with function pointers
+const struct Order Order_init =
+{
+    .setOrder = setOrder,
+    .printOrder = printOrder
+};
+
+typedef struct Bookstore
 {
     char* name;
-    Book self->listOfBooks[100];
+    Book listOfBooks[100];
     int numOfBooks;
-    Order self->listOfOrders[100];
+    Order listOfOrders[100];
     int numOfOrders;
 
     void (*putOrder)(struct Bookstore *self, Order o);
-    void Bookstore putOrder(struct Bookstore *self, Order o)
-    {
-
-        self->listOfOrders[self->numOfOrders] = o;
-        self->numOfOrders += 1;
-
-
-    }
     void (*addBook)(struct Bookstore *self, Book b);
-    void Bookstore addBook(struct Bookstore *self, Book b)
-    {
-
-        self->listOfBooks[self->numOfBooks] = b;
-        self->numOfBooks += 1;
-
-
-    }
     void (*printBookStoreBooks)(struct Bookstore *self);
-    void Bookstore printBookStoreBooks(struct Bookstore *self)
-    {
-
-        for(int i = 0; i < self->numOfBooks; i++)
-        {
-            self->listOfBooks[i].printBook();
-        }
-
-
-    }
     double (*calculateTotalOrdersIncome)(struct Bookstore *self);
-    double Bookstore calculateTotalOrdersIncome(struct Bookstore *self)
-    {
-
-        double total;
-        total = 0;
-        for(int i = 0; i < self->numOfOrders; i++)
-        {
-            if(self->listOfOrders[i].self->delivered)
-            {
-                total = total + self->listOfOrders[i].self->quantity * self->listOfOrders[i].self->book.self->price;
-
-            }
-        }
-
-        return total;
-    }
 } Bookstore;
 
-void (*putOrder)(struct Bookstore *self, Order o);
-void Bookstore putOrder(struct Bookstore *self, Order o)
+
+
+void putOrder(struct Bookstore *self, Order o)
 {
 
     self->listOfOrders[self->numOfOrders] = o;
@@ -269,8 +186,8 @@ void Bookstore putOrder(struct Bookstore *self, Order o)
 
 
 }
-void (*addBook)(struct Bookstore *self, Book b);
-void Bookstore addBook(struct Bookstore *self, Book b)
+
+void addBook(struct Bookstore *self, Book b)
 {
 
     self->listOfBooks[self->numOfBooks] = b;
@@ -278,8 +195,8 @@ void Bookstore addBook(struct Bookstore *self, Book b)
 
 
 }
-void (*printBookStoreBooks)(struct Bookstore *self);
-void Bookstore printBookStoreBooks(struct Bookstore *self)
+
+void printBookStoreBooks(struct Bookstore *self)
 {
 
     for(int i = 0; i < self->numOfBooks; i++)
@@ -289,23 +206,32 @@ void Bookstore printBookStoreBooks(struct Bookstore *self)
 
 
 }
-double (*calculateTotalOrdersIncome)(struct Bookstore *self);
-double Bookstore calculateTotalOrdersIncome(struct Bookstore *self)
+
+double calculateTotalOrdersIncome(struct Bookstore *self)
 {
 
     double total;
     total = 0;
     for(int i = 0; i < self->numOfOrders; i++)
     {
-        if(self->listOfOrders[i].self->delivered)
+        if(self->listOfOrders[i].delivered)
         {
-            total = total + self->listOfOrders[i].self->quantity * self->listOfOrders[i].self->book.self->price;
+            total = total + self->listOfOrders[i].quantity * self->listOfOrders[i].book.price;
 
         }
     }
 
     return total;
 }
+// Initialize struct with function pointers
+const struct Bookstore Bookstore_init =
+{
+    .putOrder = putOrder,
+    .addBook = addBook,
+    .printBookStoreBooks = printBookStoreBooks,
+    .calculateTotalOrdersIncome = calculateTotalOrdersIncome
+};
+
 
 
 int orderId;
@@ -317,6 +243,7 @@ Address createAddress(char* s, int n, char* c)
     Address a;
     a.setAddress(s, n, c);
 
+    return a;
 }
 
 Person createPerson(char* fn, char* ln, char* email, int phone, Address addr)
@@ -325,6 +252,7 @@ Person createPerson(char* fn, char* ln, char* email, int phone, Address addr)
     Person p;
     p.setPerson(fn, ln, email, phone, addr);
 
+    return p;
 }
 
 Book createBook(char* t, Person a, int numOfCopies, double price)
@@ -333,6 +261,7 @@ Book createBook(char* t, Person a, int numOfCopies, double price)
     Book b;
     b.setBook(t, a, numOfCopies, price);
 
+    return b;
 }
 
 Order createOrder(int orNum, Book b, int q, Address sh, int del)
@@ -341,16 +270,18 @@ Order createOrder(int orNum, Book b, int q, Address sh, int del)
     Order ord;
     ord.setOrder(orNum, b, q, sh, del);
 
+    return ord;
 }
 
 Bookstore createBookstore(char* n)
 {
 
     Bookstore bs;
-    bs.self->name = n;
-    bs.self->numOfBooks = 0;
-    bs.self->numOfOrders = 0;
+    bs.name = n;
+    bs.numOfBooks = 0;
+    bs.numOfOrders = 0;
 
+    return bs;
 }
 int main()
 {
