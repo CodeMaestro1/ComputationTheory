@@ -1,8 +1,11 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
+  #include <string.h>
   #include "cgen.h"
 
+
+  char* current_struct_name = NULL;
   void yyerror(char const* pat, ...);
   int yylex(void);
   extern int yylineno;
@@ -10,11 +13,17 @@
   extern void free_macro_table(void);
 %}
 
+
+
 /* Union for semantic values */
 %union {
     int    integerVal;
     float  floatVal;
     char  *stringVal;
+    struct {
+        char* func_ptr;
+        char* func_impl;
+    } methodParts;
 }
 
 %define parse.error verbose
@@ -88,13 +97,15 @@
 %type <stringVal> func_decls
 %type <stringVal> id_list 
 %type <stringVal> member_decl member_decl_list
-%type <stringVal> member_decls method_decl method_decls
+%type <stringVal> member_decls 
 
 %type <stringVal> simple_id array_id
 %type <stringVal> array_access member_access
 %type <stringVal> function_call
 %type <stringVal> array_dims
+%type <stringVal> comp_decl comp_decls
 
+%type <methodParts> method_decl method_decls
 
 
 %start program
@@ -108,6 +119,8 @@ program
           printf("#include <stdio.h>\n");
           printf("#include <stdlib.h>\n");
           printf("#include <math.h>\n\n");
+          printf("#include \"lambdalib.h\"\n");
+          printf("%s\n", $1);  // Complex type declarations
           printf("%s\n", $2);  // Global constants
           printf("%s\n", $3);  // Global variables 
           printf("%s\n", $4);  // Function declarations
@@ -135,11 +148,33 @@ main_func
 //Complex type declarations
 comp_decls
     : /* empty */
+        { $$ = ""; }  // Empty string for no complex type declarations
     | comp_decls comp_decl
+        { $$ = template("%s\n%s", $1, $2); }  // Concatenate complex type declarations
     ;
 
+// Modify comp_decl rule:
 comp_decl
-    : KEYWORD_COMP IDENTIFIER COLON member_decls method_decls KEYWORD_ENDCOMP SEMICOLON
+    : KEYWORD_COMP IDENTIFIER 
+        { current_struct_name = strdup($2); }
+      COLON member_decls method_decls KEYWORD_ENDCOMP SEMICOLON
+        { 
+            // Split function pointers (in struct) from implementations (outside struct)
+            $$ = template(
+                "typedef struct %s {\n"
+                "%s\n"  // member declarations
+                "%s\n"  // method declarations (only function pointers)
+                "} %s;\n\n"
+                "%s",   // method implementations (outside struct)
+                $2,    // struct name
+                $5,    // member declarations
+                $6.func_ptr,    // method declarations (function pointers)
+                $2,    // typedef name
+                $6.func_impl   // method implementations (actual functions)
+            );
+            free(current_struct_name);
+            current_struct_name = NULL;
+        }
     ;
 
 //variable declarations
@@ -186,14 +221,20 @@ array_id
         { $$ = template("self->%s%s", $2, $3); }
     ;
 
-// Add new rule for array dimensions
 array_dims
     : LEFT_BRACKET expr RIGHT_BRACKET
-        { $$ = template("[%S]", $2); }
+        { 
+            // For constant array sizes
+            if (strstr($2, "CONST_INT")) {
+                $$ = template("[%s]", $2);
+            } else {
+                // For variable sizes, we'll need to handle this as a VLA
+                $$ = template("[%s]", $2);
+            }
+        }
     | LEFT_BRACKET RIGHT_BRACKET
         { $$ = template("[]"); }
     ;
-
 
 //function declarations
 func_decls
@@ -487,29 +528,38 @@ member_decl
 
 method_decls
     : /* empty */
-        { $$ = ""; }
+        { 
+            $$.func_ptr = "";
+            $$.func_impl = ""; 
+        }
     | method_decls method_decl
-        { $$ = template("%s\n%s", $1, $2); }
+        { 
+            $$.func_ptr = template("%s\n%s", $1.func_ptr, $2.func_ptr);
+            $$.func_impl = template("%s\n%s", $1.func_impl, $2.func_impl);
+        }
     ;
 
 method_decl
     : KEYWORD_DEF IDENTIFIER LEFT_PARENTHESIS param_list_opt RIGHT_PARENTHESIS
       return_type_decl COLON local_decls stmts return_opt KEYWORD_ENDDEF SEMICOLON
     {
-        /* Transform Lambda method to C99 member function with struct self pointer */
-        $$ = template(
-            "%s %s_%s(struct %s *self%s%s) {\n%s\n%s\n}",
-            $6,              /* return type */
-            "CURRENT_COMP",  /* will be replaced with actual compound type name */
-            $2,              /* method name */
-            "CURRENT_COMP",  /* struct type name for self parameter */
-            ($4[0] != '\0') ? ", " : "",  /* add comma only if params exist */
-            $4,              /* parameter list */
-            $8,              /* local declarations */
-            $9              /* statements */
+        $$.func_ptr = template(
+            "%s (*%s)(struct %s *self%s%s);",
+            $6, $2, current_struct_name,
+            ($4[0] != '\0') ? ", " : "", $4
+        );
+
+        $$.func_impl = template(
+            "\n%s %s_%s(struct %s *self%s%s) {\n%s\n%s\n%s\n}",
+            $6,                 // return type
+            current_struct_name, // struct name prefix
+            $2,                 // method name
+            current_struct_name, // self parameter type
+            ($4[0] != '\0') ? ", " : "", $4,  // other parameters
+            $8, $9, $10        // function body
         );
     }
-    ;
+;
 
 const_decls
     : /* empty */
@@ -654,9 +704,9 @@ type
     | KEYWORD_BOOL
         {$$ = template("int");}
     | KEYWORD_COMP
-        {$$ = template("struct");}
+        {$$ = template("");}
     | IDENTIFIER
-        {$$ = template("struct %s", $1);}  // Changed to handle custom types like Address
+        {$$ = template("%s", $1);} 
     | LEFT_BRACKET CONST_INT RIGHT_BRACKET COLON type
         {$$ = template("%s[%d]", $5, $2);}
     | LEFT_BRACKET RIGHT_BRACKET COLON type

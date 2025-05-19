@@ -1,12 +1,9 @@
 # depslib dependency file v1.0
-1747605544 source:c:\users\mypc1\desktop\computationtheory\comptest\main.c
+1747665064 source:c:\users\mypc1\desktop\computationtheory\comptest\main.c
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
 	"lambdalib.h"
-	<stdio.h>
-	<stdlib.h>
-	<math.h>
 
 1747069232 c:\users\mypc1\desktop\computationtheory\lambdalib.h
 	<math.h>
