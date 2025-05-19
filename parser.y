@@ -3,6 +3,7 @@
   #include <stdlib.h>
   #include <string.h>
   #include "cgen.h"
+  #include <stdbool.h>
 
   extern char* yytext;
   char* current_struct_name = NULL;
@@ -11,6 +12,16 @@
   extern int yylineno;
   extern void add_macro(const char *name, const char *replacement);
   extern void free_macro_table(void);
+
+
+    bool needs_constructor(const char* type) {
+        return (strcmp(type, "int") != 0 
+                && strcmp(type, "double") != 0 
+                && strcmp(type, "char*") != 0
+                && strcmp(type, "void") != 0
+                && strstr(type, "[") == NULL);
+    }
+
 %}
 
 
@@ -195,7 +206,12 @@ var_decls
 
 var_decl
     : id_list COLON type SEMICOLON
-        { $$ = template("%s %s;", $3, $1);}
+        { 
+            // Simple ternary to handle constructor initialization
+            $$ = needs_constructor($3) ? 
+                template("%s %s = ctor_%s;", $3, $1, $3) :
+                template("%s %s;", $3, $1);
+        }
     | IDENTIFIER OP_ASSIGN expr SEMICOLON
         { $$ = template("%s = %s;", $1, $3); }
     ;
@@ -408,11 +424,29 @@ function_call
     : IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
         { $$ = template("%s(%s)", $1, $3); }
     | primary DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s.%s(%s)", $1, $3, $5); }
+        { 
+            // Only add comma if there are arguments
+            $$ = template("%s.%s(&%s%s%s)", 
+                $1, $3, $1,
+                ($5[0] != '\0') ? ", " : "",
+                $5); 
+        }
     | OP_HASH IDENTIFIER DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("self->%s.%s(%s)", $2, $4, $6); }
+        { 
+            // Only add comma if there are arguments
+            $$ = template("self->%s.%s(&self->%s%s%s)", 
+                $2, $4, $2,
+                ($6[0] != '\0') ? ", " : "",
+                $6); 
+        }
     | array_access DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
-        { $$ = template("%s.%s(%s)", $1, $3, $5); }
+        { 
+            // Only add comma if there are arguments
+            $$ = template("%s.%s(&%s%s%s)", 
+                $1, $3, $1,
+                ($5[0] != '\0') ? ", " : "",
+                $5); 
+        }
     ;
 
 

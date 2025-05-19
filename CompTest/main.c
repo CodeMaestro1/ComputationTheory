@@ -34,7 +34,7 @@ void printAddress(struct Address *self)
 
 }
 // Initialize struct with function pointers
-const struct Address Address_init =
+const Address ctor_Address =
 {
     .setAddress = setAddress,
     .printAddress = printAddress
@@ -42,7 +42,8 @@ const struct Address Address_init =
 
 typedef struct Person
 {
-    char* firstName, lastName;
+    char* firstName;
+    char* lastName;
     char* email;
     int phone;
     Address address;
@@ -69,12 +70,12 @@ void printPersonInfo(struct Person *self)
 {
 
     write("%s %s, email: %s phone: %d\n", self->firstName, self->lastName, self->email, self->phone);
-    self->address.printAddress();
+    self->address.printAddress(&self->address);
 
 
 }
 // Initialize struct with function pointers
-const struct Person Person_init =
+const Person ctor_Person =
 {
     .setPerson = setPerson,
     .printPersonInfo = printPersonInfo
@@ -109,14 +110,14 @@ void printBook(struct Book *self)
 
     write("Title: %s\n", self->title);
     writeStr("Author:");
-    self->author.printPersonInfo();
+    self->author.printPersonInfo(&self->author);
     write("Price:%f\n", self->price);
     write("Number of available copies: %d\n", self->numOfCopies);
 
 
 }
 // Initialize struct with function pointers
-const struct Book Book_init =
+const Book ctor_Book =
 {
     .setBook = setBook,
     .printBook = printBook
@@ -156,7 +157,7 @@ void printOrder(struct Order *self)
 
 }
 // Initialize struct with function pointers
-const struct Order Order_init =
+const Order ctor_Order =
 {
     .setOrder = setOrder,
     .printOrder = printOrder
@@ -201,7 +202,7 @@ void printBookStoreBooks(struct Bookstore *self)
 
     for(int i = 0; i < self->numOfBooks; i++)
     {
-        self->listOfBooks[i].printBook();
+        self->listOfBooks[i].printBook(&self->listOfBooks[i]);
     }
 
 
@@ -224,7 +225,7 @@ double calculateTotalOrdersIncome(struct Bookstore *self)
     return total;
 }
 // Initialize struct with function pointers
-const struct Bookstore Bookstore_init =
+const Bookstore ctor_Bookstore =
 {
     .putOrder = putOrder,
     .addBook = addBook,
@@ -240,8 +241,8 @@ int orderId;
 Address createAddress(char* s, int n, char* c)
 {
 
-    Address a;
-    a.setAddress(s, n, c);
+    Address a = ctor_Address;
+    a.setAddress(&a, s, n, c);
 
     return a;
 }
@@ -249,8 +250,8 @@ Address createAddress(char* s, int n, char* c)
 Person createPerson(char* fn, char* ln, char* email, int phone, Address addr)
 {
 
-    Person p;
-    p.setPerson(fn, ln, email, phone, addr);
+    Person p = ctor_Person;
+    p.setPerson(&p, fn, ln, email, phone, addr);
 
     return p;
 }
@@ -258,8 +259,8 @@ Person createPerson(char* fn, char* ln, char* email, int phone, Address addr)
 Book createBook(char* t, Person a, int numOfCopies, double price)
 {
 
-    Book b;
-    b.setBook(t, a, numOfCopies, price);
+    Book b = ctor_Book;
+    b.setBook(&b, t, a, numOfCopies, price);
 
     return b;
 }
@@ -267,8 +268,8 @@ Book createBook(char* t, Person a, int numOfCopies, double price)
 Order createOrder(int orNum, Book b, int q, Address sh, int del)
 {
 
-    Order ord;
-    ord.setOrder(orNum, b, q, sh, del);
+    Order ord = ctor_Order;
+    ord.setOrder(&ord, orNum, b, q, sh, del);
 
     return ord;
 }
@@ -276,7 +277,7 @@ Order createOrder(int orNum, Book b, int q, Address sh, int del)
 Bookstore createBookstore(char* n)
 {
 
-    Bookstore bs;
+    Bookstore bs = ctor_Bookstore;
     bs.name = n;
     bs.numOfBooks = 0;
     bs.numOfOrders = 0;
@@ -287,25 +288,25 @@ int main()
 {
 
     orderId = 0;
-    Order ord;
-    Address a, a1;
+    Order ord = ctor_Order;
+    Address a = ctor_Address;
     a = createAddress("Stadiou", 10, "Stadiou");
-    Person author;
+    Person author = ctor_Person;
     author = createPerson("Christos", "Papadimitriou", "cpap@gmail.com", 12345, a);
-    Book b;
+    Book b = ctor_Book;
     b = createBook("Computation Theory", author, 34.299999, 100);
-    Bookstore bs;
+    Bookstore bs = ctor_Bookstore;
     bs = createBookstore("Papasotiriou");
-    bs.addBook(b);
+    bs.addBook(&bs, b);
     a = createAddress("Wall Street", 10, "NY");
     author = createPerson("Dennis", "Richie", "richie@gmail.com", 54321, a);
     b = createBook("C Programming", author, 10.300000, 100);
-    bs.addBook(b);
-    bs.printBookStoreBooks();
+    bs.addBook(&bs, b);
+    bs.printBookStoreBooks(&bs);
     ord = createOrder(orderId, b, 2, a, 0);
     orderId += 1;
-    bs.putOrder(ord);
-    write("Bookstore orders income: %.2f\n", bs.calculateTotalOrdersIncome());
+    bs.putOrder(&bs, ord);
+    write("Bookstore orders income: %.2f\n", bs.calculateTotalOrdersIncome(&bs));
 
     return 0;
 }

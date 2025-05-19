@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1747665064 source:c:\users\mypc1\desktop\computationtheory\comptest\main.c
+1747689523 source:c:\users\mypc1\desktop\computationtheory\comptest\main.c
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
