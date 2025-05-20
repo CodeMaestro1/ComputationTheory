@@ -1,10 +1,8 @@
-# Makefile for Lambda-to-C compiler
-
 CC = gcc
 FLEX = flex
 BISON = bison
-LEX_SRC = analyzer.l
-YACC_SRC = parser.y
+LEX_SRC = mylexer.l
+YACC_SRC = myanalyzer.y
 GEN_C = cgen.c
 OUT = analyzer
 
@@ -12,14 +10,14 @@ OUT = analyzer
 
 all: $(OUT)
 
-parser.tab.c parser.tab.h: $(YACC_SRC)
+myanalyzer.tab.c myanalyzer.tab.h: $(YACC_SRC)
 	$(BISON) -d -v -r all $(YACC_SRC)
 
-lex.yy.c: $(LEX_SRC) parser.tab.h
+lex.yy.c: $(LEX_SRC) myanalyzer.tab.h
 	$(FLEX) $(LEX_SRC)
 
-$(OUT): lex.yy.c parser.tab.c $(GEN_C)
-	$(CC) -o $(OUT) lex.yy.c parser.tab.c $(GEN_C) -lfl
+$(OUT): lex.yy.c myanalyzer.tab.c $(GEN_C)
+	$(CC) -o $(OUT) lex.yy.c myanalyzer.tab.c $(GEN_C) -lfl
 
 clean:
-	rm -f $(OUT) lex.yy.c parser.tab.c parser.tab.h parser.output
+	rm -f $(OUT) lex.yy.c myanalyzer.tab.c myanalyzer.tab.h myanalyzer.output

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser.tab.h"
+#include "myanalyzer.tab.h"
 
 #define MULTIPLIER 37
 #define HASH_SIZE 101
