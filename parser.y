@@ -82,65 +82,76 @@
 %right OP_PLUS_ASSIGN OP_MINUS_ASSIGN OP_MULT_ASSIGN
 %right OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
 
-%type <stringVal> id_decl
-%type <stringVal> type
-%type <stringVal> relational_expr
-%type <stringVal> arithmetic_expr
-%type <stringVal> logical_expr
-%type <stringVal> literal
-%type <stringVal> term
-%type <stringVal> factor
-%type <stringVal> expr
-%type <stringVal> primary postfix
 %type <stringVal> arg_list arg_list_opt
-%type <stringVal> lvalue
+%type <stringVal> arithmetic_expr
+%type <stringVal> array_access member_access
+%type <stringVal> array_dims
+%type <stringVal> assignment_statement
+%type <stringVal> comp_decl comp_decls
 %type <stringVal> compound_stmt
+%type <stringVal> const_decl const_decls
 %type <stringVal> else_part
+%type <stringVal> expr
+%type <stringVal> factor
 %type <stringVal> for_loop
-%type <stringVal> return_opt
-%type <stringVal> local_decls
-%type <stringVal> stmt stmts simple_stmt assignment_statement
+%type <stringVal> func_decl
+%type <stringVal> func_decls
+%type <stringVal> function_call
+%type <stringVal> id_decl
+%type <stringVal> id_list
 %type <stringVal> list_comp
 %type <stringVal> list_comp_array
-%type <stringVal> param param_list param_list_opt return_type_decl func_decl
-%type <stringVal> var_decl var_decls
-%type <stringVal> const_decl const_decls
+%type <stringVal> literal
+%type <stringVal> local_decls
+%type <stringVal> logical_expr
+%type <stringVal> lvalue
 %type <stringVal> main_func
-%type <stringVal> func_decls
-%type <stringVal> id_list 
 %type <stringVal> member_decl member_decl_list
-%type <stringVal> member_decls 
-
-%type <stringVal> simple_id array_id
-%type <stringVal> array_access member_access
-%type <stringVal> function_call
-%type <stringVal> array_dims
-%type <stringVal> comp_decl comp_decls
-
+%type <stringVal> member_decls
 %type <methodParts> method_decl method_decls
+%type <stringVal> param param_list param_list_opt return_type_decl
+%type <stringVal> postfix
+%type <stringVal> primary
+%type <stringVal> relational_expr
+%type <stringVal> return_opt
+%type <stringVal> simple_id array_id
+%type <stringVal> simple_stmt
+%type <stringVal> stmt stmts
+%type <stringVal> term
+%type <stringVal> type
+%type <stringVal> var_decl var_decls
+
 
 
 %start program
 %%
 
-/* Grammar rules begin here */
 program
     : comp_decls const_decls var_decls func_decls main_func
-        { 
-          // Top-level program structure in C99
-          printf("#include <stdio.h>\n");
-          printf("#include <stdlib.h>\n");
-          printf("#include <math.h>\n\n");
-          printf("#include \"lambdalib.h\"\n");
-          printf("%s\n", $1);  // Complex type declarations
-          printf("%s\n", $2);  // Global constants
-          printf("%s\n", $3);  // Global variables 
-          printf("%s\n", $4);  // Function declarations
-          printf("int main() {\n%s\n  return 0; \n}\n", $5);  // Main function
-          printf("Parsed complete program\n"); 
+        {
+            FILE *fp = fopen("Result.c", "w");
+            if (fp == NULL) {
+                fprintf(stderr, "Error opening file for writing\n");
+                exit(1);
+            }
+            // Write the C99 program
+            fprintf(fp, "#include <stdio.h>\n"
+                       "#include <stdlib.h>\n"
+                       "#include <math.h>\n\n"
+                       "#include \"lambdalib.h\"\n\n"
+                       "%s\n"  // Complex type declarations
+                       "%s\n"  // Global constants
+                       "%s\n"  // Global variables
+                       "%s\n"  // Function declarations
+                       "int main() {\n"
+                       "%s\n"  // Main function body
+                       "    return 0;\n"
+                       "}\n",
+                       $1, $2, $3, $4, $5);
+            fclose(fp);
+            printf("C99 code generated successfully in Result.c\n");
         }
     ;
-
 
 //Main function
 main_func
@@ -779,13 +790,21 @@ type
 %%
 
 int main() {
-    if (yyparse() == 0) {
+    int result = yyparse();
+    
+    // Cleanup any remaining allocated memory
+    if (current_struct_name != NULL) {
+        free(current_struct_name);
+        current_struct_name = NULL;
+    }
+    
+    free_macro_table();
+    
+    if (result == 0) {
         printf("Accepted!\n");
+        return 0;
     } else {
         printf("Rejected!\n");
+        return 1;
     }
-
-    free_macro_table();
-
-    return 0;
 }

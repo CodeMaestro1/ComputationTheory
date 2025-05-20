@@ -1,0 +1,72 @@
+parser.y: warning: 3 shift/reduce conflicts [-Wconflicts-sr]
+parser.y: warning: shift/reduce conflict on token DOT [-Wcounterexamples]
+  First example: comp_decls const_decls IDENTIFIER OP_ASSIGN OP_HASH IDENTIFIER • DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS SEMICOLON var_decl func_decls main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                       $end
+         ↳ 1: comp_decls const_decls var_decls                                                                                                                                                                                    func_decls main_func
+                                     ↳ 8: var_decl                                                                                                                                                                       var_decl
+                                          ↳ 10: IDENTIFIER OP_ASSIGN expr                                                                                                                                      SEMICOLON
+                                                                     ↳ 100: logical_expr
+                                                                            ↳ 101: relational_expr
+                                                                                   ↳ 104: arithmetic_expr
+                                                                                          ↳ 111: term
+                                                                                                 ↳ 114: factor
+                                                                                                        ↳ 118: postfix
+                                                                                                               ↳ 55: function_call
+                                                                                                                     ↳ 69: OP_HASH IDENTIFIER • DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+  Second example: comp_decls const_decls var_decls IDENTIFIER OP_ASSIGN OP_HASH IDENTIFIER • DOT IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET SEMICOLON func_decls main_func $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                              $end
+         ↳ 1: comp_decls const_decls var_decls                                                                                                                                                                           func_decls main_func
+                                     ↳ 8: var_decls var_decl
+                                                    ↳ 10: IDENTIFIER OP_ASSIGN expr                                                                                                                            SEMICOLON
+                                                                               ↳ 100: logical_expr
+                                                                                      ↳ 101: relational_expr
+                                                                                             ↳ 104: arithmetic_expr
+                                                                                                    ↳ 111: term
+                                                                                                           ↳ 114: factor
+                                                                                                                  ↳ 118: postfix
+                                                                                                                         ↳ 53: array_access
+                                                                                                                               ↳ 66: member_access              DOT IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+                                                                                                                                     ↳ 56: OP_HASH IDENTIFIER •
+parser.y: warning: shift/reduce conflict on token OP_ASSIGN [-Wcounterexamples]
+  Example: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls IDENTIFIER • OP_ASSIGN expr SEMICOLON KEYWORD_ENDDEF SEMICOLON
+  Shift derivation
+    main_func
+    ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls                                                   stmts  return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                           ↳ 32: local_decls var_decl                                    ↳ 2: ε ↳ 2: ε
+                                                                                             ↳ 10: IDENTIFIER • OP_ASSIGN expr SEMICOLON
+  Reduce derivation
+    main_func
+    ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                       return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                       ↳ 35: stmt                                                          stmts   ↳ 2: ε
+                                                                                             ↳ 36: simple_stmt                                             ↳ 35: ε
+                                                                                                   ↳ 38: assignment_statement
+                                                                                                         ↳ 43: lvalue             OP_ASSIGN expr SEMICOLON
+                                                                                                               ↳ 49: IDENTIFIER •
+parser.y: warning: shift/reduce conflict on token DOT [-Wcounterexamples]
+  First example: comp_decls const_decls var_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls OP_HASH IDENTIFIER • DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON main_func $end
+  Shift derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                                  $end
+         ↳ 1: comp_decls const_decls var_decls main_func                                                                                                                                                                                                                                                main_func
+                                               ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                                             return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                  ↳ 35: stmt                                                                                                                  stmts
+                                                                                                                                        ↳ 36: simple_stmt
+                                                                                                                                              ↳ 39: postfix                                                                                         SEMICOLON
+                                                                                                                                                    ↳ 55: function_call
+                                                                                                                                                          ↳ 69: OP_HASH IDENTIFIER • DOT IDENTIFIER LEFT_PARENTHESIS arg_list_opt RIGHT_PARENTHESIS
+  Second example: comp_decls const_decls var_decls func_decls KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls OP_HASH IDENTIFIER • DOT IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET SEMICOLON stmts return_opt KEYWORD_ENDDEF SEMICOLON $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                                                                                                                                                                                                                                                         $end
+         ↳ 1: comp_decls const_decls var_decls func_decls main_func
+                                                          ↳ 2: KEYWORD_DEF KEYWORD_MAIN LEFT_PARENTHESIS RIGHT_PARENTHESIS COLON local_decls stmts                                                                                                                   return_opt KEYWORD_ENDDEF SEMICOLON
+                                                                                                                                             ↳ 35: stmt                                                                                                        stmts
+                                                                                                                                                   ↳ 36: simple_stmt
+                                                                                                                                                         ↳ 39: postfix                                                                               SEMICOLON
+                                                                                                                                                               ↳ 53: array_access
+                                                                                                                                                                     ↳ 66: member_access              DOT IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET
+                                                                                                                                                                           ↳ 56: OP_HASH IDENTIFIER •
