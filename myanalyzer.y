@@ -65,7 +65,7 @@
 %token ARROW
 %token OP_HASH
 
-%left DOT
+//%left DOT
 %left LEFT_PARENTHESIS RIGHT_PARENTHESIS
 %left LEFT_BRACKET RIGHT_BRACKET
 %right OP_POWER
@@ -81,6 +81,9 @@
 %right OP_ASSIGN 
 %right OP_PLUS_ASSIGN OP_MINUS_ASSIGN OP_MULT_ASSIGN
 %right OP_DIV_ASSIGN OP_MOD_ASSIGN OP_COLON_ASSIGN
+
+%nonassoc REDUCE_MEMBER
+%nonassoc DOT
 
 %type <stringVal> arg_list arg_list_opt
 %type <stringVal> arithmetic_expr
@@ -179,7 +182,11 @@ comp_decls
 // Modify comp_decl rule:
 comp_decl
     : KEYWORD_COMP IDENTIFIER 
-        { current_struct_name = strdup($2); }
+        { current_struct_name = strdup($2);
+            if(!current_struct_name) {
+                yyerror("Memory allocation error\n");
+                YYABORT;
+            }}
       COLON member_decls method_decls KEYWORD_ENDCOMP SEMICOLON
         { 
             // Split function pointers (in struct) from implementations (outside struct)
@@ -269,6 +276,11 @@ array_dims
         { 
             // For constant array sizes
             if (strstr($2, "CONST_INT")) {
+                int size = atoi($2);
+                if (size <= 0) {
+                    yyerror("Array size must be positive\n");
+                    YYABORT;
+                }
                 $$ = template("[%s]", $2);
             } else {
                 // For variable sizes, we'll need to handle this as a VLA
@@ -403,22 +415,24 @@ postfix
     ;
 
 
+/* Modify the member_access rule to use precedence */
 member_access
-    : OP_HASH IDENTIFIER
+    : OP_HASH IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("self->%s", $2); }
-    | primary DOT IDENTIFIER
+    | primary DOT IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("%s.%s", $1, $3); }
-    | primary DOT OP_HASH IDENTIFIER
+    | primary DOT OP_HASH IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("%s.%s", $1, $4); }  
-    | array_access DOT OP_HASH IDENTIFIER
+    | array_access DOT OP_HASH IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("%s.%s", $1, $4); }  
-    | array_access DOT IDENTIFIER
+    | array_access DOT IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("%s.%s", $1, $3); }
-    | member_access DOT IDENTIFIER
+    | member_access DOT IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("%s.%s", $1, $3); }
-    | member_access DOT OP_HASH IDENTIFIER
+    | member_access DOT OP_HASH IDENTIFIER %prec REDUCE_MEMBER
         { $$ = template("%s.%s", $1, $4); } 
     ;
+
 
 array_access
     : IDENTIFIER LEFT_BRACKET expr RIGHT_BRACKET

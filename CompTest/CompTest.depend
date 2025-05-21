@@ -1,11 +1,11 @@
 # depslib dependency file v1.0
-1747746326 source:c:\users\mypc1\desktop\computationtheory\comptest\main.c
+1747837691 source:c:\users\mypc1\desktop\computationtheory\comptest\main.c
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
 	"lambdalib.h"
 
-1747069232 c:\users\mypc1\desktop\computationtheory\lambdalib.h
+1747837376 c:\users\mypc1\desktop\computationtheory\lambdalib.h
 	<math.h>
 	<stdarg.h>
 	<stdio.h>

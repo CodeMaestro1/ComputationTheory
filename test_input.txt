@@ -1,6 +1,0 @@
-@defmacro message "Hello world!\n"
-
-
-def main():
-   writeStr(message);
-enddef;
