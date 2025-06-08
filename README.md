@@ -61,6 +61,6 @@ You can run the project on Windows using WSL (Windows Subsystem for Linux) but k
 
 ## License
 
-This project is licensed under the #TODO License. See the LICENSE file for details.
+This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.en.html). See the [LICENSE](./LICENSE) file for details.
 
 This project was developed as part of the Computation Theory course at the Technical University of Crete.
